@@ -73,7 +73,6 @@ This playbook heavily makes use of `ansible-vault`. The contents of `secrets.yml
 	- Performs some basic cleanups such as:
 		- `apt autoclean`
 		- `apt autoremove` 
-		- `docker system prune`
 
 - [**devsec.hardening**](https://github.com/dev-sec/ansible-collection-hardening)
 	- Applies battle-tested security oriented configurations for Linux, SSH, Nginx, Apache and MySQL
