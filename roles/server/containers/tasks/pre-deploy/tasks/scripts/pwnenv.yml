@@ -1,0 +1,50 @@
+- name: "PwnEnv | Make sure directories exist"
+  file:
+    path: "{{ pwnenv_dir }}"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    state: directory
+    mode: "{{ docker.dir_mode }}"
+  loop:
+    - "{{ docker.data_dir }}/pwnenv/home/{{ pwnenv.user.username }}"
+    - "{{ docker.data_dir }}/pwnenv/gluetun/wireguard/"
+  loop_control:
+    loop_var: pwnenv_dir
+
+- name: "PwnEnv | Push Dockerfile"
+  template:
+    src: "{{ role_path }}/templates/configs/pwnenv/Dockerfile"
+    dest: "{{ docker.data_dir }}/pwnenv/"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    mode: "{{ docker.file_mode }}"
+  when: lookup('file', role_path + '/templates/configs/pwnenv/Dockerfile', errors='ignore') is not none
+  register: pwnenv_dockerfile
+
+- name: "PwnEnv | Push wg0.conf"
+  template:
+    src: "{{ role_path }}/templates/configs/pwnenv/wg0.conf"
+    dest: "{{ docker.data_dir }}/pwnenv/gluetun/wireguard/"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    mode: "{{ docker.file_mode }}"
+  when: lookup('file', role_path + '/templates/configs/pwnenv/wg0.conf', errors='ignore') is not none
+  register: pwnenv_wg0
+
+- name: "PwnEnv | Push start-vnc.sh"
+  template:
+    src: "{{ role_path }}/templates/configs/pwnenv/start-vnc.sh"
+    dest: "{{ docker.data_dir }}/pwnenv/shared/"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    mode: "{{ docker.file_mode }}"
+  when: lookup('file', role_path + '/templates/configs/pwnenv/start-vnc.sh', errors='ignore') is not none
+  register: pwnenv_startvncsh
+
+- name: "PwnEnv | Recreate container"
+  community.docker.docker_compose_v2:
+    project_src: "{{ docker.compose_dir }}/pwnenv/"
+    build: always
+    recreate: always
+  when:
+    - pwnenv_dockerfile.changed or pwnenv_startvncsh.changed or pwnenv_wg0.changed

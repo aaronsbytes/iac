@@ -1,0 +1,83 @@
+---
+services:
+  nextcloud-redis:
+    image: redis
+    container_name: nextcloud-redis
+    restart: {{ docker.restart_policy }}
+    command: redis-server --requirepass {{ nextcloud.redis.pass }}
+    ports:
+      - 6379:6379/tcp
+    network_mode: bridge
+
+  nextcloud-db:
+    image: mariadb:latest
+    container_name: nextcloud-db
+    restart: {{ docker.restart_policy }}
+    command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW
+    volumes:
+      - "{{ docker.data_dir }}/nextcloud/mariadb:/var/lib/mysql"
+    environment:
+      # System
+      - TZ={{ server.os.timezone }}
+
+      # Database
+      - MYSQL_ROOT_PASSWORD={{ nextcloud.db.root_pass }}
+      - MYSQL_PASSWORD={{ nextcloud.db.pass }}
+      - MYSQL_DATABASE={{ nextcloud.db.name }}
+      - MYSQL_USER={{ nextcloud.db.user }}
+    ports:
+      - "3306:3306"
+
+  nextcloud:
+    image: nextcloud
+    container_name: nextcloud
+    restart: {{ docker.restart_policy }}
+    ports:
+      - 8080:80
+    links:
+      - nextcloud-db
+      - nextcloud-redis
+    volumes:
+      - "{{ docker.data_dir }}/nextcloud/apps:/var/www/html/data"
+      - "{{ docker.data_dir }}/nextcloud/config:/var/www/html"
+      - "{{ docker.data_dir }}/nextcloud/config/php-local.ini:/usr/local/etc/php/php-local.ini"
+    environment:
+      # System
+      - TZ={{ server.os.timezone }}
+
+      # Database
+      - MYSQL_PASSWORD={{ nextcloud.db.pass }}
+      - MYSQL_DATABASE={{ nextcloud.db.name }}
+      - MYSQL_USER={{ nextcloud.db.user }}
+      - MYSQL_HOST=nextcloud-db
+
+      # Redis
+      - REDIS_HOST_PASSWORD={{ nextcloud.redis.pass }}
+
+      # Instance
+      - NEXTCLOUD_TRUSTED_DOMAINS=cloud.{{ brand.domain }}
+
+      # Apache
+      - OVERWRITEPROTOCOL=https
+      - OVERWRITEHOST=cloud.{{ brand.domain }}
+      - OVERWRITECLIURL=https://cloud.{{ brand.domain }}
+
+      # Admin user
+      - NEXTCLOUD_ADMIN_USER={{ nextcloud.admin.user }}
+      - NEXTCLOUD_ADMIN_PASSWORD={{ nextcloud.admin.pass }}
+
+      # E-Mail
+      - SMTP_HOST={{ system.email.host }}
+      - SMTP_SECURE=ssl
+      - SMTP_PORT=465
+      - SMTP_AUTHTYPE=LOGIN
+      - SMTP_NAME={{ system.email.address }}
+      - SMTP_PASSWORD={{ system.email.pass }}
+      - MAIL_FROM_ADDRESS="{{ system.email.address }}"
+      - MAIL_DOMAIN={{ brand.domain }}
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:8080"]
+      interval: "{{ docker.healthcheck.interval }}"
+      timeout: "{{ docker.healthcheck.timeout }}"
+      retries: "{{ docker.healthcheck.retries }}"
+      start_period: "{{ docker.healthcheck.start_period }}"

@@ -1,0 +1,23 @@
+services:
+  stalwart-db:
+    image: lscr.io/linuxserver/mariadb:latest
+    container_name: stalwart-db
+    restart: {{ docker.restart_policy }}
+    environment:
+      - PUID={{ docker.puid }}
+      - PGID={{ docker.pgid }}
+      - TZ={{ server.os.timezone }}
+      - MYSQL_ROOT_PASSWORD={{ stalwart.db.root_pass }}
+      - MYSQL_DATABASE={{ stalwart.db.name }}
+      - MYSQL_USER={{ stalwart.db.user }}
+      - MYSQL_PASSWORD={{ stalwart.db.pass }}
+    volumes:
+      - "{{ docker.data_dir }}/stalwart/mariadb:/config"
+    ports:
+      - 3309:3306
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:3309"]
+      interval: "{{ docker.healthcheck.interval }}"
+      timeout: "{{ docker.healthcheck.timeout }}"
+      retries: "{{ docker.healthcheck.retries }}"
+      start_period: "{{ docker.healthcheck.start_period }}"

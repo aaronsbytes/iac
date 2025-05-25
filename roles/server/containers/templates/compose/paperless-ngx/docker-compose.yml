@@ -1,0 +1,54 @@
+services:
+  broker:
+    image: docker.io/library/redis:7
+    restart: {{ docker.restart_policy }}
+    volumes:
+      - "{{ docker.data_dir }}/paperless-ngx/redisdata:/data"
+
+  db:
+    image: docker.io/library/mariadb:11
+    restart: {{ docker.restart_policy }}
+    volumes:
+      - "{{ docker.data_dir }}/paperless-ngx/dbdata:/var/lib/mysql"
+    environment:
+      - MARIADB_HOST=paperless
+      - MARIADB_DATABASE={{ paperless.db.name }}
+      - MARIADB_USER={{ paperless.db.user }}
+      - MARIADB_PASSWORD={{ paperless.db.pass }}
+      - MARIADB_ROOT_PASSWORD={{ paperless.db.root_pass }}
+      - PUID={{ docker.puid }}
+      - PGID={{ docker.pgid }}
+
+  webserver:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    restart: {{ docker.restart_policy }}
+    depends_on:
+      - db
+      - broker
+    ports:
+      - "8800:8000"
+    volumes:
+      - "{{ docker.data_dir }}/paperless-ngx/data:/usr/src/paperless/data"
+      - "{{ docker.data_dir }}/paperless-ngx/media:/usr/src/paperless/media"
+      - "{{ docker.data_dir }}/paperless-ngx/export:/usr/src/paperless/export"
+      - "{{ docker.data_dir }}/paperless-ngx/consume:/usr/src/paperless/consume"
+    environment:
+      - PAPERLESS_REDIS=redis://broker:6379
+      - PAPERLESS_DBENGINE=mariadb
+      - PAPERLESS_DBHOST=db
+      - PAPERLESS_DBUSER={{ paperless.db.user }}
+      - PAPERLESS_DBPASS={{ paperless.db.pass }}
+      - PAPERLESS_DBPORT=3306
+      - COMPOSE_PROJECT_NAME=paperless
+      - PAPERLESS_URL=https://ppl.{{ brand.domain }}
+      - USERMAP_UID={{ docker.puid }}
+      - USERMAP_GID={{ docker.pgid }}
+      - PAPERLESS_SECRET_KEY={{ paperless.db.secret }}
+      - PAPERLESS_TIME_ZONE={{ server.os.timezone }}
+      - PAPERLESS_OCR_LANGUAGE=deu
+      - PAPERLESS_OCR_LANGUAGES=eng
+      - PAPERLESS_ADMIN_USER={{ paperless.admin.username }}
+      - PAPERLESS_ADMIN_PASSWORD={{ paperless.admin.password }}
+      - PAPERLESS_ACCOUNT_ALLOW_SIGNUPS=false
+      - PAPERLESS_APPS=allauth.socialaccount.providers.openid_connect
+      - PAPERLESS_SOCIALACCOUNT_PROVIDERS={"openid_connect":{"SCOPE":["openid","profile","email","groups"],"OAUTH_PKCE_ENABLED":true,"APPS":[{"provider_id":"authelia","name":"Continue with {{ brand.name }}","client_id":"{{ authelia.oidc.paperless.id }}","secret":"{{ authelia.oidc.paperless.secret }}","settings":{"server_url":"https://auth.{{ brand.domain }}","token_auth_method":"client_secret_basic"}}]}}

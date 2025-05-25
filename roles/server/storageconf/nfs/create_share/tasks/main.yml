@@ -1,0 +1,33 @@
+- name: "Storageconf | Ensure NFS packages are installed"
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - nfs-kernel-server  # Debian/Ubuntu
+  when:
+    - ansible_facts['os_family'] == 'Debian' or ansible_facts['os_family'] == 'RedHat'
+
+- name: "Storageconf | Ensure export directory exists"
+  ansible.builtin.file:
+    path: "{{ server.settings.nfs.path }}"
+    state: directory
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    mode: "{{ docker.dir_mode }}"
+
+- name: "Storageconf | Add NFS export entry"
+  ansible.builtin.lineinfile:
+    path: /etc/exports
+    line: "{{ server.settings.nfs.path }} *(rw,sync,no_subtree_check,no_root_squash)"
+    state: present
+  register: nfs_exports
+
+- name: "Storageconf | Export NFS shares"
+  ansible.builtin.command: exportfs -ra
+  when: nfs_exports.changed
+
+- name: "Storageconf | Ensure NFS service is running and enabled"
+  ansible.builtin.service:
+    name: "{{ 'nfs-kernel-server' if ansible_facts['os_family'] == 'Debian' else 'nfs-server' }}"
+    state: started
+    enabled: true

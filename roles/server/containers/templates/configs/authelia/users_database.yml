@@ -1,0 +1,20 @@
+users:
+  master:
+    displayname: "{{ authelia.user.master.displayname }}"
+    password: "{{ authelia.user.master.pass }}"
+    email: "{{ authelia.user.master.email }}"
+    groups:
+      - admins
+      - admin
+      - owner
+      - dev
+    
+  aaron:
+    displayname: "{{ authelia.user.aaron.displayname }}"
+    password: "{{ authelia.user.aaron.pass }}"
+    email: "{{ authelia.user.aaron.email }}"
+
+  max:
+    displayname: "{{ authelia.user.max.displayname }}"
+    password: "{{ authelia.user.max.pass }}"
+    email: "{{ authelia.user.max.email }}"

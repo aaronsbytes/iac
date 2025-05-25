@@ -1,0 +1,20 @@
+services:
+  caddy:
+    build:
+      dockerfile: "{{ docker.data_dir }}/caddy/Dockerfile"
+    container_name: caddy
+    restart: {{ docker.restart_policy }}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "2019:2019"
+    volumes:
+      - "{{ docker.data_dir }}/caddy/Caddyfile:/etc/caddy/Caddyfile"
+      - "{{ docker.data_dir }}/caddy/site:/srv"
+      - "{{ docker.data_dir }}/caddy/caddy_data:/data"
+      - "{{ docker.data_dir }}/caddy/caddy_config:/config"
+      - "{{ docker.data_dir }}/caddy/certs/certificate.pem:/etc/ssl/certs/certificate.pem"
+      - "{{ docker.data_dir }}/caddy/private/key.pem:/etc/ssl/private/key.pem"
+    environment:
+      - ACME_AGREE=true
+      - CLOUDFLARE_AUTH_TOKEN={{ cf.api_token }}

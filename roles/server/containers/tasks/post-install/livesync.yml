@@ -1,0 +1,26 @@
+- name: "Livesync | Push init-couchdb.sh"
+  template:
+    src: "{{ role_path }}/templates/configs/livesync/init-couchdb.sh"
+    dest: "{{ docker.compose_dir }}/livesync/"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    mode: "{{ docker.file_mode }}"
+  when: lookup('file', role_path + '/templates/configs/livesync/init-couchdb.sh', errors='ignore') is not none
+  register: livesync_initcouchdbsh
+
+- name: "Livesync | Execute init-couchdb.sh"
+  shell: "cat {{ docker.compose_dir }}/livesync/init-couchdb.sh | bash"
+  register: result
+  when: livesync_initcouchdbsh.changed
+
+- name: "Livesync | init-couchdb.sh | Check for errors"
+  debug:
+    var: result.stderr
+  when: result is defined and result.failed
+
+- name: "Livesync | Recreate container"
+  community.docker.docker_compose_v2:
+    project_src: "{{ docker.compose_dir }}/livesync/"
+    build: always
+    recreate: always
+  when: livesync_initcouchdbsh.changed

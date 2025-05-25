@@ -1,0 +1,4 @@
+- name: "Base Deployment | Include tasks"
+  include_tasks: "{{ item }}"
+  with_fileglob:
+    - "modules/*.yml"

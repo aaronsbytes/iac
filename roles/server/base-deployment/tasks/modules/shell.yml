@@ -1,0 +1,4 @@
+- name: "Base Deployment | Shell | Set default shell"
+  ansible.builtin.user:
+    name: "{{ ansible_user }}"
+    shell: "/usr/bin/{{ server.os.shell }}"

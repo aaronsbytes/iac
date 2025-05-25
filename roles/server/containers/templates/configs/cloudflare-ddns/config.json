@@ -1,0 +1,22 @@
+{
+    "cloudflare": [{
+        "authentication": {
+          "api_token": "{{ cf.api_token }}",
+          "api_key": {
+            "api_key": "api_key_here",
+            "account_email": "{{ cf.account_email }}"
+          }
+        },
+        "zone_id": "{{ cf.zone_id }}",
+        "subdomains": [
+            {
+                "name": "{{ cf.ddns }}",
+                "proxied": false
+            }
+        ]
+    }],
+    "a": true,
+    "aaaa": true,
+    "purgeUnknownRecords": false,
+    "ttl": 900
+}

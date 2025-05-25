@@ -1,0 +1,9 @@
+services:
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    restart: {{ docker.restart_policy }}
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    environment:
+    - WATCHTOWER_LABEL_ENABLE=true

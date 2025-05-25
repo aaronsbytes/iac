@@ -1,0 +1,23 @@
+services:
+  stalwart-mail:
+    image: stalwartlabs/mail-server:latest
+    container_name: stalwart-mailserver
+    restart: {{ docker.restart_policy }}
+    ports:
+        - "8080:8080" # http (only for local use!)
+        - "25:25"     # smtp (unencrypted but needed)
+        - "587:587"   # smtp (over StartTLS)
+        - "465:465"   # smtps (over TLS)
+        - "993:993"   # imaps (over TLS)
+        - "995:995"   # pop3s (over TLS)
+    volumes:
+      - "{{ docker.data_dir }}/stalwart:/opt/stalwart-mail"
+      - "{{ docker.data_dir }}/stalwart/webadmin:/opt/stalwart-mail/webadmin"
+      - "{{ docker.data_dir }}/stalwart/logs:/logs"
+    tty: true
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:8080"]
+      interval: "{{ docker.healthcheck.interval }}"
+      timeout: "{{ docker.healthcheck.timeout }}"
+      retries: "{{ docker.healthcheck.retries }}"
+      start_period: "{{ docker.healthcheck.start_period }}"

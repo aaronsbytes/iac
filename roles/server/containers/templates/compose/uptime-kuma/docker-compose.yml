@@ -1,0 +1,12 @@
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: uptime-kuma
+    restart: {{ docker.restart_policy }}
+    labels:
+      - com.centurylinklabs.watchtower.enable="true"
+    ports:
+      - 3001:3001
+    volumes:
+      - "{{ docker.data_dir }}/uptime-kuma:/app/data"
+      - "/var/run/docker.sock:/var/run/docker.sock"

@@ -1,0 +1,5 @@
+- name: "Containers | Deploy | {{ service.name }}"
+  community.docker.docker_compose_v2:
+    project_src: "{{ docker.compose_dir }}/{{ service.id }}/"
+    build: always
+    recreate: auto

@@ -1,0 +1,35 @@
+- name: "Caddy | Make sure directory exists"
+  file:
+    path: "{{ docker.data_dir }}/caddy/"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    state: directory
+    mode: "{{ docker.dir_mode }}"
+
+- name: "Caddy | Push Dockerfile"
+  template:
+    src: "{{ role_path }}/templates/configs/caddy/Dockerfile"
+    dest: "{{ docker.data_dir }}/caddy/"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    mode: "{{ docker.file_mode }}"
+  when: lookup('file', role_path + '/templates/configs/caddy/Dockerfile', errors='ignore') is not none
+  register: caddy_dockerfile
+
+- name: "Caddy | Push Caddyfile"
+  template:
+    src: "{{ role_path }}/templates/configs/caddy/Caddyfile"
+    dest: "{{ docker.data_dir }}/caddy/"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    mode: "{{ docker.file_mode }}"
+  when: lookup('file', role_path + '/templates/configs/caddy/Caddyfile', errors='ignore') is not none
+  register: caddy_caddyfile
+
+- name: "Caddy | Recreate container"
+  community.docker.docker_compose_v2:
+    project_src: "{{ docker.compose_dir }}/caddy/"
+    build: always
+    recreate: always
+  when:
+    - caddy_caddyfile.changed or caddy_dockerfile.changed

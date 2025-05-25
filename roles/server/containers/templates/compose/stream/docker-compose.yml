@@ -1,0 +1,237 @@
+services:
+  # VPN
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    restart: {{ docker.restart_policy }}
+    labels:
+      - com.centurylinklabs.watchtower.enable="true"
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - TZ={{ server.os.timezone }}
+      - VPN_SERVICE_PROVIDER=custom
+      - VPN_TYPE=wireguard
+      - FIREWALL_VPN_INPUT_PORTS=52715
+    ports:
+      - 9091:9091 # transmission web
+      - 8191:8191 # flaresolverr
+    volumes:
+      - "{{ docker.data_dir }}/stream/gluetun:/gluetun"
+  
+  # youtube download manager
+  ytmdm:
+    container_name: ytmdm
+    network_mode: "service:gluetun"
+    build:
+      context: "{{ docker.data_dir }}/stream/ytmdm"
+      dockerfile: Dockerfile
+    volumes:
+      - "{{ docker.data_dir }}/stream/ytmdm:/app"
+      - "{{ docker.data_dir }}/stream/media/music:/music"
+
+  # Cloudflare protection bypass proxy 
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    restart: {{ docker.restart_policy }}
+    network_mode: "service:gluetun"
+    labels:
+      - com.centurylinklabs.watchtower.enable="true"
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_HTML=${LOG_HTML:-false}
+      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
+      - TZ={{ server.os.timezone }}
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:8191"]
+      interval: "{{ docker.healthcheck.interval }}"
+      timeout: "{{ docker.healthcheck.timeout }}"
+      retries: "{{ docker.healthcheck.retries }}"
+      start_period: "{{ docker.healthcheck.start_period }}"
+
+  # Download Client
+  transmission:
+    image: lscr.io/linuxserver/transmission:latest
+    container_name: transmission
+    restart: {{ docker.restart_policy }}
+    network_mode: "service:gluetun"
+    labels:
+      - com.centurylinklabs.watchtower.enable="true"
+    environment:
+      - PUID={{ docker.puid }}
+      - PGID={{ docker.pgid }}
+      - TZ={{ server.os.timezone }}
+    volumes:
+      - "{{ docker.data_dir }}/stream/transmission/config:/config"
+      - "{{ docker.data_dir }}/stream/transmission/downloads:/downloads"
+      - "{{ docker.data_dir }}/stream/transmission/watch:/watch"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:9091"]
+      interval: "{{ docker.healthcheck.interval }}"
+      timeout: "{{ docker.healthcheck.timeout }}"
+      retries: "{{ docker.healthcheck.retries }}"
+      start_period: "{{ docker.healthcheck.start_period }}"
+  
+  # Subtitles
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    restart: {{ docker.restart_policy }}
+    labels:
+      - com.centurylinklabs.watchtower.enable="true"
+    environment:
+      - PUID={{ docker.puid }}
+      - PGID={{ docker.pgid }}
+      - TZ={{ server.os.timezone }}
+    volumes:
+      - "{{ docker.data_dir }}/stream/bazarr/config:/config"
+      - "{{ docker.data_dir }}/stream/media/movies:/movies"
+      - "{{ docker.data_dir }}/stream/media/series:/tv"
+    ports:
+      - 6767:6767
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:6767"]
+      interval: "{{ docker.healthcheck.interval }}"
+      timeout: "{{ docker.healthcheck.timeout }}"
+      retries: "{{ docker.healthcheck.retries }}"
+      start_period: "{{ docker.healthcheck.start_period }}"
+
+  # Streaming Interface
+  jellyfin:
+    image: jellyfin/jellyfin
+    container_name: jellyfin
+    restart: {{ docker.restart_policy }}
+    labels:
+      - com.centurylinklabs.watchtower.enable="true"
+    environment:
+      - PUID={{ docker.puid }}
+      - PGID={{ docker.pgid }}
+      - TZ={{ server.os.timezone }}
+    ports:
+      - 8096:8096
+    volumes:
+      - "{{ docker.data_dir }}/stream/jellyfin/config:/config"
+      - "{{ docker.data_dir }}/stream/jellyfin/cache:/cache"
+      - "{{ docker.data_dir }}/stream/media:/media"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:8096"]
+      interval: "{{ docker.healthcheck.interval }}"
+      timeout: "{{ docker.healthcheck.timeout }}"
+      retries: "{{ docker.healthcheck.retries }}"
+      start_period: "{{ docker.healthcheck.start_period }}"
+
+  stream-02:
+    image: jellyfin/jellyfin
+    container_name: "stream-02"
+    restart: {{ docker.restart_policy }}
+    labels:
+      - com.centurylinklabs.watchtower.enable="true"
+    environment:
+      - PUID={{ docker.puid }}
+      - PGID={{ docker.pgid }}
+      - TZ={{ server.os.timezone }}
+    ports:
+      - 8097:8096
+    volumes:
+      - "{{ docker.data_dir }}/stream/primehub/config:/config"
+      - "{{ docker.data_dir }}/stream/primehub/cache:/cache"
+      - "{{ docker.data_dir }}/stream/media/stream-02:/media"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:8097"]
+      interval: "{{ docker.healthcheck.interval }}"
+      timeout: "{{ docker.healthcheck.timeout }}"
+      retries: "{{ docker.healthcheck.retries }}"
+      start_period: "{{ docker.healthcheck.start_period }}"
+
+  # Indexer
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    restart: {{ docker.restart_policy }}
+    labels:
+      - com.centurylinklabs.watchtower.enable="true"
+    environment:
+      - PUID={{ docker.puid }}
+      - PGID={{ docker.pgid }}
+      - TZ={{ server.os.timezone }}
+    ports:
+      - 9696:9696
+    volumes:
+      - "{{ docker.data_dir }}/stream/prowlarr/config:/config"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:9696"]
+      interval: "{{ docker.healthcheck.interval }}"
+      timeout: "{{ docker.healthcheck.timeout }}"
+      retries: "{{ docker.healthcheck.retries }}"
+      start_period: "{{ docker.healthcheck.start_period }}"
+
+  # Movies
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    restart: {{ docker.restart_policy }}
+    labels:
+      - com.centurylinklabs.watchtower.enable="true"
+    environment:
+     - PUID={{ docker.puid }}
+     - PGID={{ docker.pgid }}
+     - TZ={{ server.os.timezone }}
+    volumes:
+      - "{{ docker.data_dir }}/stream/radarr/config:/config"
+      - "{{ docker.data_dir }}/stream/media/movies:/movies"
+      - "{{ docker.data_dir }}/stream/transmission/downloads/complete/radarr:/downloads/complete/radarr"
+    ports:
+      - 7878:7878
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:7878"]
+      interval: "{{ docker.healthcheck.interval }}"
+      timeout: "{{ docker.healthcheck.timeout }}"
+      retries: "{{ docker.healthcheck.retries }}"
+      start_period: "{{ docker.healthcheck.start_period }}"
+
+  # Shows / Series
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    restart: {{ docker.restart_policy }}
+    labels:
+      - com.centurylinklabs.watchtower.enable="true"
+    environment:
+     - PUID={{ docker.puid }}
+     - PGID={{ docker.pgid }}
+     - TZ={{ server.os.timezone }}
+    volumes:
+      - "{{ docker.data_dir }}/stream/sonarr/config:/config"
+      - "{{ docker.data_dir }}/stream/media/series:/series"
+      - "{{ docker.data_dir }}/stream/transmission/downloads/complete/tv-sonarr:/downloads/complete/tv-sonarr"
+    ports:
+      - 8989:8989
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:8989"]
+      interval: "{{ docker.healthcheck.interval }}"
+      timeout: "{{ docker.healthcheck.timeout }}"
+      retries: "{{ docker.healthcheck.retries }}"
+      start_period: "{{ docker.healthcheck.start_period }}"
+
+  jellyseerr:
+    image: ghcr.io/fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    restart: {{ docker.restart_policy }}
+    labels:
+      - com.centurylinklabs.watchtower.enable="true"
+    environment:
+      - TZ={{ server.os.timezone }}
+      - PORT=5055
+    ports:
+      - 5055:5055
+    volumes:
+      - "{{ docker.data_dir }}/stream/jellyseerr:/app/config"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:5055"]
+      interval: "{{ docker.healthcheck.interval }}"
+      timeout: "{{ docker.healthcheck.timeout }}"
+      retries: "{{ docker.healthcheck.retries }}"
+      start_period: "{{ docker.healthcheck.start_period }}"

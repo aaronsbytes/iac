@@ -1,0 +1,17 @@
+- name: "Immich | Push .env"
+  template:
+    src: "{{ role_path }}/templates/configs/immich/.env"
+    dest: "{{ docker.compose_dir }}/immich/"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    mode: "{{ docker.file_mode }}"
+  when: lookup('file', role_path + '/templates/configs/immich/.env', errors='ignore') is not none
+  register: immich_env
+
+- name: "Immich | Recreate container"
+  community.docker.docker_compose_v2:
+    project_src: "{{ docker.compose_dir }}/immich/"
+    build: always
+    recreate: always
+  when:
+    - immich_env.changed

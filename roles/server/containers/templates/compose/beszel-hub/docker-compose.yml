@@ -1,0 +1,11 @@
+services:
+  beszel:
+    image: henrygd/beszel
+    container_name: beszel-hub
+    labels:
+      - com.centurylinklabs.watchtower.enable="true"
+    restart: {{ docker.restart_policy }}
+    ports:
+      - 8090:8090
+    volumes:
+      - "{{ docker.data_dir }}/beszel-hub:/beszel_data"

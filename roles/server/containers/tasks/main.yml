@@ -1,0 +1,70 @@
+- name: "Containers | Make sure Docker directories exist"
+  file:
+    path: "{{ item }}"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    state: directory
+    mode: "{{ docker.dir_mode }}"
+  loop:
+    - "{{ docker.compose_dir }}"
+    - "{{ docker.data_dir }}"
+
+- name: "Containers | Make sure individual compose directories exist"
+  file:
+    path: "{{ docker.compose_dir }}/{{ service.id }}"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    state: directory
+    mode: "{{ docker.file_mode }}"
+  loop: "{{ services }}"
+  loop_control:
+    loop_var: service
+
+- name: "Containers | Make sure individual data directories exist"
+  file:
+    path: "{{ docker.data_dir }}/{{ service.id }}"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    state: directory
+    mode: "{{ docker.dir_mode }}"
+  loop: "{{ services }}"
+  loop_control:
+    loop_var: service
+
+- name: "Containers | Push compose files"
+  template:
+    src: "{{ role_path }}/templates/compose/{{ service.id }}/docker-compose.yml"
+    dest: "{{ docker.compose_dir }}/{{ service.id }}/docker-compose.yml"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    mode: "{{ docker.file_mode }}"
+  loop: "{{ services }}"
+  loop_control:
+    loop_var: service
+  when: lookup('file', role_path + '/templates/compose/' + service.id + '/docker-compose.yml', errors='ignore') is not none
+
+- name: "Containers | Perform Pre-Deployments"
+  include_tasks: "{{ role_path }}/tasks/pre-deploy/tasks/main.yml"
+  when:
+    - docker.settings.preconfigure
+
+- name: "Containers | Get individual compose directories"
+  find:
+    paths: "{{ docker.compose_dir }}"
+    file_type: directory
+  register: subdirectories
+
+- name: "Containers | Deploy from compose files"
+  include_tasks: deploy_container.yml
+  loop: "{{ services }}"
+  loop_control:
+    loop_var: service
+
+- name: "Containers | Perform Post-Installation tasks"
+  loop: "{{ services }}"
+  loop_control:
+    loop_var: post_install_service
+  include_tasks: "{{ role_path }}/tasks/post-install/{{ post_install_service.id }}.yml"
+  when:
+    - docker.settings.preconfigure
+    - lookup('file', role_path + '/tasks/post-install/' + post_install_service.id + '.yml', errors='ignore') is not none

@@ -1,0 +1,14 @@
+services:
+  devenv:
+    build:
+      dockerfile: "{{ docker.data_dir }}/devenv/Dockerfile"
+    hostname: "{{ devenv.host.hostname }}"
+    container_name: devenv
+    environment:
+      - TZ={{ server.os.timezone }}
+      - PUID={{ docker.puid }}
+      - PGID={{ docker.pgid }}
+    ports:
+      - "{{ devenv.ssh.port }}:{{ devenv.ssh.port }}"
+    volumes:
+      - "{{ docker.data_dir }}/devenv/home/{{ devenv.user.username }}:/home/{{ devenv.user.username }}"

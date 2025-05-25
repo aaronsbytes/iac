@@ -1,0 +1,16 @@
+services:
+  cloudflare-ddns:
+    image: timothyjmiller/cloudflare-ddns:latest
+    container_name: cloudflare-ddns
+    labels:
+      - com.centurylinklabs.watchtower.enable="true"
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ={{ server.os.timezone }}
+      - PUID={{ docker.puid }}
+      - PGID={{ docker.pgid }}
+    volumes:
+      - "{{ docker.data_dir }}/cloudflare-ddns/config.json:/config.json"
+    restart: {{ docker.restart_policy }}
+    network_mode: "host"

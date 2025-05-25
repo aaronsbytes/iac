@@ -1,0 +1,22 @@
+{
+    "perform-post-cleanup": true,
+    "max-workers": 4,
+    "concurrent-fragments": 8,
+    "red_flags": [
+            "live",
+            "slowed",
+            "sped up",
+            "reverb",
+            "capella",
+            "instrumental",
+            "greatest hits",
+            "best of",
+            "best hits",
+            "00s",
+            "00's",
+            " hits ",
+            "intro",
+            " classics ",
+            "commentary"
+        ]
+}

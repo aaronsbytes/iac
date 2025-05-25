@@ -1,0 +1,62 @@
+- name: "Authelia | Make sure config directory exists"
+  file:
+    path: "{{ docker.data_dir }}/authelia/config/"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    state: directory
+    mode: "{{ docker.dir_mode }}"
+
+- name: "Authelia | Push configuration.yml"
+  template:
+    src: "{{ role_path }}/templates/configs/authelia/configuration.yml"
+    dest: "{{ docker.data_dir }}/authelia/config/"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    mode: "{{ docker.file_mode }}"
+  when: lookup('file', role_path + '/templates/configs/authelia/configuration.yml', errors='ignore') is not none
+  register: authelia_config
+
+- name: "Authelia | Push users_database.yml"
+  template:
+    src: "{{ role_path }}/templates/configs/authelia/users_database.yml"
+    dest: "{{ docker.data_dir }}/authelia/config/"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    mode: "{{ docker.file_mode }}"
+  when: lookup('file', role_path + '/templates/configs/authelia/users_database.yml', errors='ignore') is not none
+  register: authelia_userdb
+
+- name: "Authelia | Push setup.sh"
+  template:
+    src: "{{ role_path }}/templates/configs/authelia/setup.sh"
+    dest: "{{ docker.data_dir }}/authelia/config/"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    mode: "{{ docker.file_mode }}"
+  when: lookup('file', role_path + '/templates/configs/authelia/setup.sh', errors='ignore') is not none
+  register: authelia_setupsh
+
+- name: "Authelia | Check if secrets exist"
+  stat:
+    path: "{{ authelia_secret }}"
+  loop:
+    - "{{ docker.data_dir }}/authelia/secrets/oidc/jwks/rsa_private.pem"
+    - "{{ docker.data_dir }}/authelia/secrets/HMAC_SECRET"
+    - "{{ docker.data_dir }}/authelia/secrets/JWT_SECRET"
+    - "{{ docker.data_dir }}/authelia/secrets/SESSION_SECRET"
+    - "{{ docker.data_dir }}/authelia/secrets/STORAGE_ENCRYPTION_KEY"
+  loop_control:
+    loop_var: authelia_secret
+  register: authelia_secrets
+
+- name: "Authelia | Execute setup.sh (if needed)"
+  shell: "cat {{ docker.data_dir }}/authelia/config/setup.sh | sh"
+  when: authelia_secrets.results | selectattr('stat.exists', 'equalto', false) | list | length > 0
+
+- name: "Authelia | Recreate container"
+  community.docker.docker_compose_v2:
+    project_src: "{{ docker.compose_dir }}/authelia/"
+    build: always
+    recreate: always
+  when:
+    - authelia_config.changed or authelia_userdb.changed or authelia_setupsh.changed

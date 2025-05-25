@@ -1,0 +1,10 @@
+# .gitignore
+*.retry
+*.log
+*.tmp
+*.bak
+*.swp
+__pycache__/
+*.tar.gz
+.vault_pass
+plugins/

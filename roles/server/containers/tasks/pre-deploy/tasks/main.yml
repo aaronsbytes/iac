@@ -1,0 +1,8 @@
+- name: "Containers | Pre-Deployment"
+  loop: "{{ services }}"
+  loop_control:
+    loop_var: service
+  include_tasks: "{{ role_path }}/tasks/pre-deploy/tasks/scripts/{{ service.id }}.yml"
+  when:
+    - docker.settings.preconfigure
+    - lookup('file', role_path + '/tasks/pre-deploy/tasks/scripts/' + service.id + '.yml', errors='ignore') is not none

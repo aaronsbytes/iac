@@ -1,0 +1,15 @@
+services:
+  pihole:
+    image: pihole/pihole:latest
+    container_name: pihole
+    restart: {{ docker.restart_policy }}
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "8020:80/tcp"
+    environment:
+      TZ: {{ server.os.timezone }}
+      FTLCONF_webserver_api_password: "{{ pihole.password }}"
+      FTLCONF_dns_listeningMode: "all" # If using Docker's default `bridge` network setting the dns listening mode should be set to 'all'
+    volumes:
+      - "{{ docker.data_dir }}/pihole:/etc/pihole"

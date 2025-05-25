@@ -1,0 +1,35 @@
+- name: "VPS0-Caddy | Make sure directories exist"
+  file:
+    path: "{{ docker.data_dir }}/caddy/"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    state: directory
+    mode: "{{ docker.dir_mode }}"
+
+- name: "VPS0-Caddy | Push Dockerfile"
+  template:
+    src: "{{ role_path }}/templates/configs/vps0-caddy/Dockerfile"
+    dest: "{{ docker.data_dir }}/caddy/"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    mode: "{{ docker.file_mode }}"
+  when: lookup('file', role_path + '/templates/configs/vps0-caddy/Dockerfile', errors='ignore') is not none
+  register: vps0caddy_dockerfile
+
+- name: "VPS0-Caddy | Push Caddyfile"
+  template:
+    src: "{{ role_path }}/templates/configs/vps0-caddy/Caddyfile"
+    dest: "{{ docker.data_dir }}/caddy/"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    mode: "{{ docker.file_mode }}"
+  when: lookup('file', role_path + '/templates/configs/vps0-caddy/Caddyfile', errors='ignore') is not none
+  register: vps0caddy_caddyfile
+
+- name: "VPS0-Caddy | Recreate container"
+  community.docker.docker_compose_v2:
+    project_src: "{{ docker.compose_dir }}/vps0-caddy/"
+    build: always
+    recreate: always
+  when:
+    - vps0caddy_caddyfile.changed or vps0caddy_dockerfile.changed

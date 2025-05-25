@@ -1,0 +1,18 @@
+- name: "Storageconf | Ensure NFS client utilities are installed"
+  ansible.builtin.package:
+    name: "{{ 'nfs-common' if ansible_facts['os_family'] == 'Debian' else 'nfs-utils' }}"
+    state: present
+
+- name: "Storageconf | Create NFS mount directory"
+  ansible.builtin.file:
+    path: "{{ server.settings.nfs.path }}"
+    state: directory
+    mode: "{{ docker.dir_mode }}"
+
+- name: "Storageconf | Mount NFS share"
+  ansible.posix.mount:
+    src: "{{ server.settings.nfs.host.ip }}:{{ server.settings.nfs.path }}"
+    path: "{{ server.settings.nfs.path }}"
+    fstype: nfs
+    opts: rw,sync,hard,intr
+    state: mounted

@@ -1,0 +1,31 @@
+- name: "Stalwart | Make sure directories exist"
+  file:
+    path: "{{ stalwart_dir }}"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    state: directory
+    mode: "{{ docker.dir_mode }}"
+  loop:
+    - "{{ docker.data_dir }}/stalwart/etc/"
+    - "{{ docker.data_dir }}/stalwart/logs/"
+    - "{{ docker.data_dir }}/stalwart/webadmin/"
+  loop_control:
+    loop_var: stalwart_dir
+
+- name: "Stalwart | Push config.toml"
+  template:
+    src: "{{ role_path }}/templates/configs/stalwart/config.toml"
+    dest: "{{ docker.data_dir }}/stalwart/etc/"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    mode: "{{ docker.file_mode }}"
+  when: lookup('file', role_path + '/templates/configs/stalwart/config.toml', errors='ignore') is not none
+  register: stalwart_config
+
+- name: "Stalwart | Recreate container"
+  community.docker.docker_compose_v2:
+    project_src: "{{ docker.compose_dir }}/stalwart/"
+    build: always
+    recreate: always
+  when:
+    - stalwart_config.changed

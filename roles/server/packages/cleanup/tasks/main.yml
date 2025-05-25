@@ -1,0 +1,9 @@
+- name: "Cleanup | Apt | Removing unused packages"
+  ansible.builtin.apt:
+    autoremove: yes
+    purge: yes
+    update_cache: no
+
+- name: "Cleanup | Apt | Clearing cache"
+  ansible.builtin.apt:
+    autoclean: yes

@@ -1,0 +1,18 @@
+services:
+  couchdb:
+    image: apache/couchdb:latest
+    container_name: "obsidian-livesync"
+    restart: "{{ docker.restart_policy }}"
+    stdin_open: true
+    tty: true
+    environment:
+      - TZ="{{ server.os.timezone }}"
+      - PUID=5984
+      - PGID=5984
+      - COUCHDB_USER={{ livesync.username }}
+      - COUCHDB_PASSWORD={{ livesync.password }}
+    ports:
+      - {{ livesync.hostname }}:5984
+    volumes:
+      - "{{ docker.data_dir }}/livesync/data:/opt/couchdb/data"
+      - "{{ docker.data_dir }}/livesync/etc:/opt/couchdb/etc/local.d"

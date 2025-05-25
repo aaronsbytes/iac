@@ -1,0 +1,81 @@
+- name: "Nextcloud | Wait for installation to finish"
+  shell: "docker exec -u www-data nextcloud php occ status"
+  register: occ_status
+  retries: 50
+  delay: 5
+  until: "'installed: true' in occ_status.stdout"
+
+- name: "Nextcloud | Disable apps"
+  shell: "docker exec -u www-data nextcloud php occ app:disable {{ item }}"
+  loop:
+    - "activity"
+    - "systemtags"
+    - "comments"
+    - "contactsinteraction"
+    - "federation"
+    - "files_reminders"
+    - "files_sharing"
+    - "files_downloadlimit"
+    - "logreader"
+    - "firstrunwizard"
+    - "nextcloud_announcements"
+    - "serverinfo"
+    - "notifications"
+    - "photos"
+    - "recommendations"
+    - "sharebymail"
+    - "circles"
+    - "updatenotification"
+    - "survey_client"
+    - "user_status"
+    - "suspicious_login"
+
+- name: "Nextcloud | Install apps"
+  shell: "docker exec -u www-data nextcloud php occ app:install {{ item }}"
+  ignore_errors: yes # in case the apps are already installed
+  loop:
+    - "calendar"
+    - "user_oidc"
+
+- name: "Nextcloud | Enable apps"
+  shell: "docker exec -u www-data nextcloud php occ app:enable {{ item }}"
+  loop:
+    - "user_oidc"
+    - "admin_audit"
+    - "calendar"
+
+- name: "Nextcloud | Push logo"
+  template:
+    src: "media/logo.svg"
+    dest: "{{ docker.data_dir }}/nextcloud/config"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    mode: "{{ docker.file_mode }}"
+  when: lookup('file', 'media/logo.svg', errors='ignore') is not none
+  register: nextcloud_logo
+
+- name: "Nextcloud | Set up OpenID Connect"
+  shell: "docker exec -u www-data nextcloud php occ user_oidc:provider authelia --clientid={{ authelia.oidc.nextcloud.id }} --clientsecret={{ authelia.oidc.nextcloud.secret }} --discoveryuri=https://auth.{{ brand.domain }}/.well-known/openid-configuration"
+
+- name: "Nextcloud | Set instance name"
+  shell: "docker exec -u www-data nextcloud php occ theming:config name '{{ brand.name }} Cloud'"
+
+- name: "Nextcloud | Set instance slogan"
+  shell: "docker exec -u www-data nextcloud php occ theming:config slogan '{{ brand.desc }}'"
+
+- name: "Nextcloud | Set instance logo"
+  shell: "docker exec -u www-data nextcloud php occ theming:config logo /var/www/html/logo.svg"
+  when: nextcloud_logo is defined and not nextcloud_logo.failed
+
+- name: "Nextcloud | Add trusted proxies"
+  shell: "docker exec -u www-data nextcloud php occ config:system:set trusted_proxies 0 --value={{ trusted_proxy_ip }} --type=string"
+  loop:
+    - "{{ ips.tailscale.lotus_vps0 }}"
+  loop_control:
+    loop_var: trusted_proxy_ip
+
+- name: "Nextcloud | Recreate container"
+  community.docker.docker_compose_v2:
+    project_src: "{{ docker.compose_dir }}/nextcloud/"
+    build: always
+    recreate: always

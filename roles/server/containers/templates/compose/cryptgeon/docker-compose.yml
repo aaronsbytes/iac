@@ -1,0 +1,29 @@
+services:
+  cryptgeon:
+    image: cupcakearmy/cryptgeon:latest
+    container_name: cryptgeon
+    restart: {{ docker.restart_policy }}
+    labels:
+      - com.centurylinklabs.watchtower.enable="true"
+    depends_on:
+      - redis
+    environment:
+      SIZE_LIMIT: 16 MiB
+    ports:
+      - 8000:8000
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:8000"]
+      interval: "{{ docker.healthcheck.interval }}"
+      timeout: "{{ docker.healthcheck.timeout }}"
+      retries: "{{ docker.healthcheck.retries }}"
+      start_period: "{{ docker.healthcheck.start_period }}"
+  
+  redis:
+    image: redis:7-alpine
+    container_name: cryptgeon-redis
+    restart: {{ docker.restart_policy }}
+    labels:
+      - com.centurylinklabs.watchtower.enable="true"
+    command: redis-server --save "" --appendonly no
+    tmpfs:
+      - "{{ docker.data_dir }}/cryptgeon/tmp"

@@ -1,0 +1,102 @@
+#::::::::::::::::#
+#:::::Server:::::#
+#::::::::::::::::#
+
+# ~ Configurations for Debian deployments
+
+server:
+  # OS vars
+  os:
+    timezone: Europe/Berlin
+    shell: fish
+
+  # Playbook settings
+  settings:
+    # Performs apt update & apt upgrade
+    update: true
+
+    # Wether or not to apply hardening roles/collections
+    hardening:
+      devsec: true
+
+    # Deploys Docker container from "containers" role
+    # Define deployments in host_vars
+    containers: true
+
+    # Performs apt autoremove & docker system prune
+    # Performs basic cleanups such as apt autoremove, docker system prune
+    cleanup: true
+
+    # Applies some standards i want for my servers
+    base_deployment: true
+
+    # Package management
+    packages:
+      apt:
+        install:
+          - powertop
+          - curl
+          - wget
+          - git
+          - lynis
+          - neovim
+          - cmatrix
+          - unzip
+          - fish
+
+        remove:
+          - exim4
+          - exim4-base
+          - exim4-config
+          - exim4-daemon-light
+
+    # Performs custom installs (such as yazi - not in the repos)
+    custom_installs:
+      enabled: true
+      wanted:
+        - yazi
+
+    # Network shared filesystem
+    # Used for Docker containers data
+    nfs:
+      path: /srv/nfs/shared
+      host:
+        hostname: "lotus-master-node"
+        ip: "{{ ips.tailscale.lotus_master_node }}"
+    
+      # Adds a cronjob to mount the share at system startup (recommended)
+      automount: true
+
+#::::::::::::::::#
+#:::::Docker:::::#
+#::::::::::::::::#
+
+# ~ Configurations for Docker container deployments
+
+docker:
+  settings:
+    # Pre-configures some services
+    # Copies configuration files
+    preconfigure: true
+
+  # Where the containers save their files
+  data_dir: /root/docker-data
+
+  # Where the compose files are saved
+  compose_dir: /root/docker-compose
+
+  # User and permissions
+  file_mode: "0755"
+  dir_mode: "0755"
+  puid: 1000
+  pgid: 1000
+
+  # Restart policy
+  restart_policy: "unless-stopped"
+
+  # Healthcheck standards
+  healthcheck:
+    interval: 5s
+    timeout: 5s
+    retries: 5
+    start_period: 3s

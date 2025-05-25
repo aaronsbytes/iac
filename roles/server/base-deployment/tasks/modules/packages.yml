@@ -1,0 +1,19 @@
+- name: "Base Deployment | Packages | Apt | Install"
+  apt:
+    name: "{{ package_to_install }}"
+    state: present
+    update_cache: yes
+  loop: "{{ server.settings.packages.apt.install }}"
+  loop_control:
+    loop_var: package_to_install
+
+- name: "Base Deployment | Packages | Apt | Remove"
+  ansible.builtin.apt:
+    name: " {{ package_to_remove }}"
+    state: absent
+    purge: yes
+    autoremove: yes
+    update_cache: yes
+  loop: "{{ server.settings.packages.apt.remove }}"
+  loop_control:
+    loop_var: package_to_remove

@@ -1,0 +1,201 @@
+theme: dark
+
+server:
+  address: "tcp://:9091"
+  endpoints:
+    authz:
+      forward-auth:
+        implementation: "ForwardAuth"
+
+# Logging config
+log:
+  level: "warn"
+  format: "json"
+
+storage:
+  local:
+    path: "/config/db.sqlite3"
+
+authentication_backend:
+  password_reset.disable: false
+  file:
+    path: "/config/users_database.yml"
+    password:
+      algorithm: argon2id
+      iterations: 20
+      key_length: 100
+      salt_length: 16
+      memory: 2048
+      parallelism: 10
+
+# Define session config
+session:
+  cookies:
+    - domain: {{ brand.domain }}
+      authelia_url: "https://auth.{{ brand.domain }}"
+      default_redirection_url: "https://www.{{ brand.domain }}"
+      name: "authelia_session"
+      expiration: "3 hours"
+      inactivity: "30 minutes"
+      remember_me: '7d'
+
+# Define 2FA
+totp:
+  disable: false
+  issuer: "auth.{{ brand.domain }}"
+  algorithm: "sha512"
+  digits: 6
+  period: 30
+  skew: 1
+  secret_size: 32
+  allowed_algorithms:
+    - 'SHA512'
+  allowed_digits:
+    - 6
+  allowed_periods:
+    - 30
+  disable_reuse_security_policy: false
+
+# Define access controls
+access_control:
+  default_policy: deny
+  rules:
+    #::::::::::::::::#
+    #:::::Bypass:::::#
+    #::::::::::::::::#
+
+    # Nextcloud
+    - domain: [
+        "cloud.{{ brand.domain }}",     # Nextcloud
+        "stalwart.{{ brand.domain }}",  # Stalwart
+        "stream.{{ brand.domain }}",    # Jellyfin
+        "beszel.{{ brand.domain }}",    # Beszel
+        "photos.{{ brand.domain }}",    # Immich
+        "crg.{{ brand.domain }}",       # Cryptgeon
+        "ppl.{{ brand.domain }}",       # Paperless-ngx
+        "piped.{{ brand.domain }}",     # Piped
+        "livesync.{{ brand.domain }}"   # Obsidian Livesync
+      ]
+      policy: "bypass"
+
+    #:::::::::::::#
+    #:::::2FA:::::#
+    #:::::::::::::#
+
+    - domain: [
+        "prowlarr.{{ brand.domain }}",
+        "radarr.{{ brand.domain }}",
+        "sonarr.{{ brand.domain }}",
+        "trm.{{ brand.domain }}"
+      ]
+      policy: "two_factor"
+
+    #:::::::::::::::::::::#
+    #:::::Admin::Only:::::#
+    #:::::::::::::::::::::#
+
+    - domain: [
+        "upt.{{ brand.domain }}",
+        "beszel.{{ brand.domain }}",
+        "bazarr.{{ brand.domain }}",
+        "mb.{{ brand.domain }}",
+        "vpn.{{ brand.domain }}"
+      ]
+      policy: "two_factor"
+      subject:
+        - ["user:master"]
+
+identity_providers:
+  oidc:
+    jwks: {% raw %}
+      - key: {{ secret "/secrets/oidc/jwks/rsa_private.pem" | mindent 10 "|" | msquote }}
+{% endraw %}
+    clients:
+      - client_id: "{{ authelia.oidc.beszel.id }}" # pocketbase
+        client_name: "{{ authelia.oidc.beszel.name }}"
+        client_secret: "{{ authelia.oidc.beszel.secret_hash }}"
+        public: false
+        authorization_policy: 'one_factor'
+        redirect_uris:
+          - 'https://beszel.{{ brand.domain }}/api/oauth2-redirect'
+        scopes:
+          - 'email'
+          - 'groups'
+          - 'openid'
+          - 'profile'
+        userinfo_signed_response_alg: 'none'
+
+      - client_id: "{{ authelia.oidc.nextcloud.id }}"
+        client_name: "{{ authelia.oidc.nextcloud.name }}"
+        client_secret: "{{ authelia.oidc.nextcloud.secret_hash }}"
+        public: false
+        authorization_policy: 'two_factor'
+        require_pkce: true
+        pkce_challenge_method: 'S256'
+        redirect_uris:
+          - "https://cloud.{{ brand.domain }}/apps/user_oidc/code"
+        scopes:
+          - 'openid'
+          - 'profile'
+          - 'email'
+          - 'groups'
+        userinfo_signed_response_alg: 'none'
+        token_endpoint_auth_method: 'client_secret_post'
+
+      - client_id: "{{ authelia.oidc.immich.id }}"
+        client_name: "{{ authelia.oidc.immich.name }}"
+        client_secret: "{{ authelia.oidc.immich.secret_hash }}"
+        public: false
+        authorization_policy: 'one_factor'
+        redirect_uris:
+          - 'https://photos.{{ brand.domain }}/auth/login'
+          - 'https://photos.{{ brand.domain }}/user-settings'
+          - 'app.immich:///oauth-callback'
+        scopes:
+          - 'openid'
+          - 'profile'
+          - 'email'
+        userinfo_signed_response_alg: 'none'
+        token_endpoint_auth_method: 'client_secret_basic'
+
+      - client_id: '{{ authelia.oidc.paperless.id }}'
+        client_name: 'Paperless'
+        client_secret: '{{ authelia.oidc.paperless.secret_hash }}'
+        public: false
+        authorization_policy: 'two_factor'
+        require_pkce: true
+        pkce_challenge_method: 'S256'
+        redirect_uris:
+          - 'https://ppl.{{ brand.domain }}/accounts/oidc/authelia/login/callback/'
+        scopes:
+          - 'openid'
+          - 'profile'
+          - 'email'
+          - 'groups'
+        userinfo_signed_response_alg: 'none'
+        token_endpoint_auth_method: 'client_secret_basic'
+
+regulation:
+  max_retries: 3
+  find_time: "15 minutes"
+  ban_time: "240 minutes"
+
+notifier:
+  disable_startup_check: true
+  smtp:
+    address: "smtp://{{ brand.domain }}:465"
+    timeout: "5s"
+    username: "{{ system.email.address }}"
+    password: "{{ system.email.pass }}"
+    sender: "{{ system.email.address }}"
+    subject: "🔑 {{ brand.name }}: {title}"
+    disable_require_tls: false
+    disable_starttls: false
+    disable_html_emails: false
+
+ntp:
+  address: "udp://time.cloudflare.com:123"
+  version: 3
+  max_desync: "3s"
+  disable_startup_check: false
+  disable_failure: false

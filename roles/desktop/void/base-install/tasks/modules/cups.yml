@@ -1,0 +1,13 @@
+- name: "Base Install | Cups | Install"
+  become: true
+  shell: "xbps-install -y cups cups-filters gutenprint hplip foomatic-db foomatic-db-nonfree brother-brlaser epson-inkjet-printer-escpr cnijfilter2"
+
+- name: "Base Install | Cups | Check if service is enabled"
+  stat:
+    path: "/var/service/cupsd"
+  register: cupsd_stat
+
+- name: "Base Install | Cups | Enable service"
+  become: true
+  shell: "ln -s /etc/sv/cupsd /var/service"
+  when: not cupsd_stat.stat.exists

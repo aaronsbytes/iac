@@ -1,0 +1,16 @@
+- name: "Base Install | Enable nonfree repository"
+  become: true
+  shell: "xbps-install -y void-repo-nonfree"
+
+- name: "Base Install | Perform Update"
+  become: true
+  shell: "xbps-install -Suy"
+
+- name: "Base Install | Include modules"
+  include_tasks: "{{ item }}"
+  with_fileglob:
+    - "modules/*.yml"
+
+- name: "Base Install | Restart host"
+  reboot:
+    reboot_timeout: 600

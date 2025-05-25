@@ -1,0 +1,81 @@
+- name: "Streaming Stack | Make sure directories exist"
+  file:
+    path: "{{ stream_directory }}"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    state: directory
+    mode: "{{ docker.dir_mode }}"
+  loop:
+    - "{{ docker.data_dir }}/stream/ytmdm/"
+    - "{{ docker.data_dir }}/stream/prowlarr/config/"
+    - "{{ docker.data_dir }}/stream/radarr/config/"
+    - "{{ docker.data_dir }}/stream/sonarr/config/"
+    - "{{ docker.data_dir }}/stream/gluetun/wireguard/"
+  loop_control:
+    loop_var: stream_directory
+
+- name: "Streaming Stack | YTMDM | Push files"
+  template:
+    src: "{{ ytmdm_file }}"
+    dest: "{{ docker.data_dir }}/stream/ytmdm/"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    mode: "{{ docker.file_mode }}"
+  loop:
+    - "{{ role_path }}/templates/configs/stream/ytmdm/artists.json"
+    - "{{ role_path }}/templates/configs/stream/ytmdm/config.json"
+    - "{{ role_path }}/templates/configs/stream/ytmdm/Dockerfile"
+    - "{{ role_path }}/templates/configs/stream/ytmdm/requirements.txt"
+    - "{{ role_path }}/templates/configs/stream/ytmdm/ytmdm.py"
+  loop_control:
+    loop_var: ytmdm_file
+  when: lookup('file', ytmdm_file, errors='ignore') is not none
+  register: ytmdm_files
+
+- name: "Streaming Stack| Prowlarr | Push config.xml"
+  template:
+    src: "{{ role_path }}/templates/configs/stream/prowlarr/config.xml"
+    dest: "{{ docker.data_dir }}/stream/prowlarr/config/"
+    owner: "{{ docker.puid  }}"
+    group: "{{ docker.pgid }}"
+    mode: "{{ docker.file_mode }}"
+  when: lookup('file', role_path + '/templates/configs/stream/prowlarr/config.xml', errors='ignore') is not none
+  register: prowlarr_config
+
+- name: "Streaming Stack | Radarr | Push config.xml"
+  template:
+    src: "{{ role_path }}/templates/configs/stream/radarr/config.xml"
+    dest: "{{ docker.data_dir }}/stream/radarr/config/"
+    owner: "{{ docker.puid  }}"
+    group: "{{ docker.pgid }}"
+    mode: "{{ docker.file_mode }}"
+  when: lookup('file', role_path + '/templates/configs/stream/radarr/config.xml', errors='ignore') is not none
+  register: radarr_config
+
+- name: "Streaming Stack | Sonarr | Push config.xml"
+  template:
+    src: "{{ role_path }}/templates/configs/stream/sonarr/config.xml"
+    dest: "{{ docker.data_dir }}/stream/sonarr/config/"
+    owner: "{{ docker.puid  }}"
+    group: "{{ docker.pgid }}"
+    mode: "{{ docker.file_mode }}"
+  when: lookup('file', role_path + '/templates/configs/stream/sonarr/config.xml', errors='ignore') is not none
+  register: sonarr_config
+
+- name: "Streaming Stack | Gluetun | Push wg0.conf"
+  template:
+    src: "{{ role_path }}/templates/configs/stream/gluetun/wg0.conf"
+    dest: "{{ docker.data_dir }}/stream/gluetun/wireguard/"
+    owner: "{{ docker.puid  }}"
+    group: "{{ docker.pgid }}"
+    mode: "{{ docker.file_mode }}"
+  when: lookup('file', role_path + '/templates/configs/stream/gluetun/wg0.conf', errors='ignore') is not none
+  register: gluetun_wg0
+
+- name: "Stream | Recreate container"
+  community.docker.docker_compose_v2:
+    project_src: "{{ docker.compose_dir }}/stream/"
+    build: always
+    recreate: always
+  when:
+    - ytmdm_files.results | selectattr('changed', 'equalto', true) | list | length > 0 or prowlarr_config.changed or radarr_config.changed or sonarr_config.changed or gluetun_wg0.changed

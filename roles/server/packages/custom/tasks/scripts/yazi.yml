@@ -1,0 +1,45 @@
+- name: "Custom Installs | Yazi | Check if installed"
+  become: true
+  stat:
+    path: "/usr/bin/yazi"
+  register: yazi_bin
+
+- name: "Custom Installs | Yazi | Download latest musl build"
+  become: true
+  get_url:
+    url: "https://github.com/sxyazi/yazi/releases/latest/download/yazi-x86_64-unknown-linux-musl.zip"
+    dest: "/tmp/yazi.zip"
+    mode: '{{ docker.file_mode }}'
+  when: not yazi_bin.stat.exists
+
+- name: "Custom Installs | Yazi | Unzip"
+  become: true
+  unarchive:
+    src: "/tmp/yazi.zip"
+    dest: "/tmp/"
+    remote_src: true
+  when: not yazi_bin.stat.exists
+
+- name: "Custom Installs | Yazi | Install to /usr/local/bin"
+  become: true
+  copy:
+    remote_src: true
+    src: "/tmp/yazi-x86_64-unknown-linux-musl/yazi"
+    dest: "/usr/bin/yazi"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    mode: "{{ docker.file_mode }}"
+  when: not yazi_bin.stat.exists
+
+- name: "Custom Installs | Yazi | Make sure temp files are absent"
+  file:
+    path: "{{ yazi_temp_path }}"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    state: absent
+    mode: "{{ docker.dir_mode }}"
+  loop:
+    - "/tmp/yazi.zip"
+    - "/tmp/yazi/"
+  loop_control:
+    loop_var: "yazi_temp_path"

@@ -1,0 +1,33 @@
+services:
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    restart: {{ docker.restart_policy }}
+    hostname: "env"
+    labels:
+      - com.centurylinklabs.watchtower.enable="true"
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - TZ={{ server.os.timezone }}
+      - VPN_SERVICE_PROVIDER=custom
+      - VPN_TYPE=wireguard
+    volumes:
+      - "{{ docker.data_dir }}/pwnenv/gluetun:/gluetun"
+
+  pwnenv:
+    build:
+      dockerfile: "{{ docker.data_dir }}/pwnenv/Dockerfile"
+    container_name: pwnenv
+    restart: {{ docker.restart_policy }}
+    #network_mode: "service:gluetun"
+    ports:
+      - "{{ pwnenv.ssh.port }}:{{ pwnenv.ssh.port }}"
+      - "{{ pwnenv.vnc.port }}:{{ pwnenv.vnc.port }}"
+    tty: true
+    environment:
+      - TZ={{ server.os.timezone }}
+    volumes:
+      - "{{ docker.data_dir }}/pwnenv/shared:/shared"

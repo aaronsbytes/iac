@@ -1,0 +1,29 @@
+- name: "DevEnv | Make sure directory exists"
+  file:
+    path: "{{ docker.data_dir }}/devenv/home/{{ devenv.user.username }}"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    state: directory
+    mode: "{{ docker.dir_mode }}"
+
+- name: "DevEnv | Push Dockerfile"
+  template:
+    src: "{{ role_path }}/templates/configs/devenv/Dockerfile"
+    dest: "{{ docker.data_dir }}/devenv/"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    mode: "{{ docker.file_mode }}"
+  when: lookup('file', role_path + '/templates/configs/devenv/Dockerfile', errors='ignore') is not none
+  register: devenv_dockerfile
+
+
+- name: "DevEnv | Chown home directory"
+  shell: "chown -R 1000:1000 {{ docker.data_dir }}/devenv/home/{{ devenv.user.username }}"
+
+#- name: "DevEnv | Recreate container"
+#  community.docker.docker_compose_v2:
+#    project_src: "{{ docker.compose_dir }}/devenv/"
+#    build: always
+#    recreate: always
+#  when:
+#    - devenv_dockerfile.changed

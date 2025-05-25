@@ -1,0 +1,12 @@
+- name: "Base Deployment | Cronjobs | Add 'powertop --auto-tune'"
+  ansible.builtin.cron:
+    name: "daily backup"
+    special_time: reboot
+    user: root
+    job: "powertop --auto-tune"
+
+- name: "Base Deployment | Cronjobs | Add | mount {{ server.settings.nfs.path }}"
+  ansible.builtin.cron:
+    name: "Mount NFS share on boot"
+    special_time: reboot
+    job: "mount {{ server.settings.nfs.path }}"

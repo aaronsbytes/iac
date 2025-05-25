@@ -1,0 +1,23 @@
+services:
+  mullvad-browser:
+    image: lscr.io/linuxserver/mullvad-browser:latest
+    container_name: mullvad-browser
+    labels:
+      - com.centurylinklabs.watchtower.enable="true"
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - TZ={{ server.os.timezone }}
+    volumes:
+      - "{{ docker.data_dir }}/mullvad-browser:/config"
+    ports:
+      - 3000:3000
+      - 3001:3001
+    shm_size: "2gb"
+    restart: {{ docker.restart_policy }}
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:3001"]
+      interval: "{{ docker.healthcheck.interval }}"
+      timeout: "{{ docker.healthcheck.timeout }}"
+      retries: "{{ docker.healthcheck.retries }}"
+      start_period: "{{ docker.healthcheck.start_period }}"

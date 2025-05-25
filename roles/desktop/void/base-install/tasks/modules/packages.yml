@@ -1,0 +1,72 @@
+- name: "Base Install | Packages | Xbps | Install"
+  become: true
+  shell: "xbps-install -y {{ package }}"
+  loop:
+    # cli
+    - btop
+    - rclone
+    - fastfetch
+    - neovim
+    - git
+    - github-cli
+    - file
+    - yazi
+    - jq
+    - 7zip
+    - poppler
+    - fd
+    - resvg
+    - ImageMagick
+    - wl-clipboard
+    - ffmpeg
+    - fzf
+    - bat
+    - eza
+    - zoxide
+    - wget
+    - curl
+    - starship
+    - tmux
+    - nerd-fonts
+    - tailscale
+    - wireguard-tools
+
+    # gui
+    - flatpak
+    - keepassxc
+    - vlc
+    - krita
+    - Signal-Desktop
+
+    # gaming
+    - steam
+    - lutris
+    - obs
+
+    # office
+    - simple-scan
+    - gnome-calendar
+    - gnome-online-accounts
+  loop_control:
+    loop_var: package
+
+- name: "Base Install | Packages | Flatpak | Ensure flathub remote exists"
+  community.general.flatpak_remote:
+    name: flathub
+    state: present
+    flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
+    method: system
+
+- name: "Base Install | Packages | Flatpak | Install"
+  community.general.flatpak:
+    name: "{{ flatpak_package }}"
+    state: present
+    method: system
+  loop:
+    - md.obsidian.Obsidian
+    - org.torproject.torbrowser-launcher
+    - com.vscodium.codium
+    - com.github.iwalton3.jellyfin-media-player
+    - org.onlyoffice.desktopeditors
+  loop_control:
+    loop_var: flatpak_package

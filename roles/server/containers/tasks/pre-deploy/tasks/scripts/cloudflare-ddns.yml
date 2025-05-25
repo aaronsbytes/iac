@@ -1,0 +1,25 @@
+- name: "Cloudflare DDNS | Make sure directory exists"
+  file:
+    path: "{{ docker.data_dir }}/cloudflare-ddns/"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    state: directory
+    mode: "{{ docker.dir_mode }}"
+
+- name: "Cloudflare DDNS | Push config.json"
+  template:
+    src: "{{ role_path }}/templates/configs/cloudflare-ddns/config.json"
+    dest: "{{ docker.data_dir }}/cloudflare-ddns/"
+    owner: "{{ docker.puid }}"
+    group: "{{ docker.pgid }}"
+    mode: "{{ docker.file_mode }}"
+  when: lookup('file', role_path + '/templates/configs/cloudflare-ddns/config.json', errors='ignore') is not none
+  register: cfddns_config
+
+- name: "Cloudflare DDNS | Recreate container"
+  community.docker.docker_compose_v2:
+    project_src: "{{ docker.compose_dir }}/cloudflare-ddns/"
+    build: always
+    recreate: always
+  when:
+    - cfddns_config.changed

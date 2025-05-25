@@ -1,0 +1,16 @@
+- name: "Cloudflare | DNS | Add records"
+  community.general.cloudflare_dns:
+    # Account
+    api_token: "{{ cf.api_token }}"
+    zone: "{{ brand.domain }}"
+
+    # Record
+    state: present
+    proxied: "{{ record.proxied }}"
+    type: "{{ record.type }}"
+    record: "{{ record.name }}"
+    value: "{{ record.value }}"
+
+  loop: "{{ cf.records }}"
+  loop_control:
+      loop_var: record
