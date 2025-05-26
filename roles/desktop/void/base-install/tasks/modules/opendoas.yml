@@ -1,0 +1,9 @@
+- name: "Base Install | OpenDoas | Set up for wheel"
+  become: true
+  copy:
+    dest: /etc/doas.conf
+    content: |
+      permit persist :wheel
+    owner: root
+    group: root
+    mode: '0400'
