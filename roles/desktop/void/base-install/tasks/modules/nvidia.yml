@@ -2,5 +2,22 @@
   community.general.xbps:
     state: present
     update_cache: true
-    name: nvidia
+    name: "{{ nvidia_packages }}"
+  vars:
+    nvidia_packages:
+      - "nvidia"
+      - "nvidia-libs-32bit"
+      - "mesa-dri"
   when: nvidia.driver.install
+
+- name: "Base Install | Drivers | Nvidia | Install 32-bit compatibility libraries"
+  community.general.xbps:
+  vars:
+    32bit_libraries:
+      - "libgcc-32bit"
+      - "libstdc++-32bit"
+      - "libdrm-32bit"
+      - "libglvnd-32bit"
+      - "mesa-dri-32bit"
+
+#TODO: add nvidia-drm.modeset=1 to GRUB commandline

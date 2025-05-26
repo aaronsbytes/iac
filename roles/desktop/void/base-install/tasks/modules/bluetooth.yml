@@ -1,7 +1,11 @@
 - name: "Base Install | Drivers | Bluetooth | Install"
+  vars:
+    bluetooth_packages:
+      - bluez
+      - libspa-bluetooth
   community.general.xbps:
     state: present
-    name: bluez
+    name: "{{ bluetooth_packages }}"
 
 - name: "Base Install | Bluetooth | Check if bluetoothd is enabled"
   stat:

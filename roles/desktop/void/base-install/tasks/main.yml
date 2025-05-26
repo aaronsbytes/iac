@@ -1,17 +1,20 @@
-- name: "Base Install | XBPS | Check if nonfree repository is installed"
-  community.general.xbps:
-    name: void-repo-nonfree
-    state: present
-  register: nonfree_repo
-  check_mode: true
-  changed_when: false
-
 - name: "Base Install | XBPS | Enable nonfree repository"
   become: true
   community.general.xbps:
     state: present
     name: void-repo-nonfree
-  when: nonfree_repo is changed
+
+- name: "Base Install | XBPS | Enable multilib repository"
+  become: true
+  community.general.xbps:
+    state: present
+    name: void-repo-multilib
+
+- name: "Base Install | XBPS | Enable multilib-nonfree repository"
+  become: true
+  community.general.xbps:
+    state: present
+    name: void-repo-multilib-nonfree
 
 - name: "Base Install | XBPS | Update repository index"
   community.general.xbps:

@@ -1,0 +1,5 @@
+- name: "Base Install | Pulseaudio | Install packages"
+  vars:
+    pipewire_packages:
+      - pulseaudio
+      - alsa-plugins-pulseaudio

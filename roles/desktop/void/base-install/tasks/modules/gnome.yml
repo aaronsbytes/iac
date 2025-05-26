@@ -1,7 +1,12 @@
 - name: "Base Install | Gnome | Install packages"
+  loop: "{{ gnome_packages }}"
+  loop_control:
+    loop_var: gnome_package
   community.general.xbps:
     state: present
-    name:
+    name: "{{ gnome_package }}"
+  vars:
+    gnome_packages:
       - gnome-core
       - gdm
       - adwaita-fonts
@@ -12,11 +17,6 @@
       - xdg-user-dirs
       - gnome-terminal
   register: gnome_install_result
-
-- name: "Base Install | Gnome | Restart host"
-  reboot:
-    reboot_timeout: 600
-  when: gnome_install_result.changed
 
 - name: "Base Install | Gnome | Check if GDM is enabled"
   stat:

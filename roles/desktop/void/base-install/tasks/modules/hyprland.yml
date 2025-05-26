@@ -1,11 +1,16 @@
 - name: "Base Install | Hyprland | Install"
+  loop: "{{ hyprland_packages }}"
+  loop_control:
+    loop_var: hyprland_package
   community.general.xbps:
     state: present
     update_cache: true
     accept_pubkey: true
     repositories:
       - https://raw.githubusercontent.com/Makrennel/hyprland-void/repository-x86_64-glibc
-    name:
+    name: "{{ hyprland_package }}"
+  vars:
+    hyprland_packages:
       - hyprland
       - hyprland-devel
       - xdg-desktop-portal-hyprland

@@ -3,10 +3,20 @@
 #::::::::::::::#
 
 - name: "Base Install | Packages | Xbps | Install"
+  become: true
+  loop: "{{ packages }}"
+  loop_control:
+    loop_var: package
   community.general.xbps:
+    upgrade_xbps: true
     state: present
-    name:
+    update_cache: true
+    name: "{{ package }}"
+  vars:
+    packages:
       # CLI
+      - kitty
+      - fish-shell
       - opendoas
       - man-db
       - btop
@@ -59,6 +69,11 @@
       - nmap
       - lynis
 
+      # Utilities
+      - gnome-tweaks
+      - baobab
+      - gnome-disk-utility
+
 #:::::::::::::::::#
 #:::::Flatpak:::::#
 #:::::::::::::::::#
@@ -78,6 +93,7 @@
       # Productivity
       - md.obsidian.Obsidian
       - com.vscodium.codium
+      - app.zen_browser.zen
 
       # Entertainment
       - com.github.iwalton3.jellyfin-media-player
@@ -91,3 +107,6 @@
       # Customization
       - org.gtk.Gtk3theme.adw-gtk3 
       - org.gtk.Gtk3theme.adw-gtk3-dark
+
+      # Gaming
+      - com.discordapp.Discord
