@@ -23,4 +23,20 @@
   loop_control:
     loop_var: library
 
-#TODO: add nvidia-drm.modeset=1 to GRUB commandline
+- name: "Base Install | Drivers | Nvidia | Check kernel parameters"
+  lineinfile:
+    backup: true
+    path: /etc/default/grub
+    regexp: '^GRUB_CMDLINE_LINUX_DEFAULT=".*nvidia-drm.modeset=1'
+    state: absent
+  check_mode: true
+  register: grub_cmdline_check
+  changed_when: false
+
+- name: "Base Install | Drivers | Nvidia | Set kernel parameters"
+  lineinfile:
+    backrefs: true
+    path: /etc/default/grub
+    regexp: "^(GRUB_CMDLINE_LINUX_DEFAULT=\".*)\"$"
+    line: '\1 nvidia-drm.modeset=1"'
+  when: grub_cmdline_check.found == 0

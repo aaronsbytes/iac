@@ -1,36 +1,29 @@
-#- name: "Base Install | AppArmor | Install packages"
-#  become: true
-#  shell: "xbps-install -Sy apparmor"
-#
-#- name: "Base Install | AppArmor | Ensure kernel parameters are set"
-#  become: yes
-#  lineinfile:
-#    path: /etc/default/grub
-#    regexp: '^GRUB_CMDLINE_LINUX_DEFAULT='
-#    line: "{{ grub_line }}"
-#  vars:
-#    grub_line: "{{ grub_current.stdout | regex_replace('\"$', ' apparmor=1 security=apparmor\"') }}"
-#  register: grub_modify
-#  changed_when: "'apparmor=1' not in grub_current.stdout"
-#  check_mode: no
-#  ignore_errors: yes
-#
-#- name: "Base Install | AppArmor | GRUB_CMDLINE_LINUX_DEFAULT"
-#  become: yes
-#  command: grep '^GRUB_CMDLINE_LINUX_DEFAULT=' /etc/default/grub
-#  register: grub_current
-#  changed_when: false
-#
-#- name: "Base Install | AppArmor | Update GRUB_CMDLINE_LINUX_DEFAULT"
-#  become: yes
-#  lineinfile:
-#    path: /etc/default/grub
-#    regexp: '^GRUB_CMDLINE_LINUX_DEFAULT='
-#    line: "{{ grub_current.stdout | regex_replace('\"$', ' apparmor=1 security=apparmor\"') }}"
-#  when: "'apparmor=1' not in grub_current.stdout"
-#
-#- name: "Base Install | AppArmor | Update grub config"
-#  become: yes
-#  command: update-grub
-#  when: grub_modify is changed
-#
+- name: "Base Install | AppArmor | Install"
+  community.general.xbps:
+    name: apparmor
+    state: present
+
+- name: "Base Install | AppArmor | Set enforce"
+  lineinfile:
+    path: /etc/default/apparmor
+    regexp: '^APPARMOR='
+    line: 'APPARMOR=enforce'
+    create: false
+
+- name: "Base Install | AppArmor | Check kernel parameters"
+  lineinfile:
+    backup: true
+    path: /etc/default/grub
+    regexp: '^GRUB_CMDLINE_LINUX_DEFAULT=".*apparmor=1 security=apparmor'
+    state: absent
+  check_mode: true
+  register: grub_cmdline_check
+  changed_when: false
+
+- name: "Base Install | AppArmor | Set kernel parameters"
+  lineinfile:
+    backrefs: true
+    path: /etc/default/grub
+    regexp: "^(GRUB_CMDLINE_LINUX_DEFAULT=\".*)\"$"
+    line: '\1 apparmor=1 security=apparmor"'
+  when: grub_cmdline_check.found == 0
