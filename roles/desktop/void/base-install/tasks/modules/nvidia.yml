@@ -12,12 +12,15 @@
 
 - name: "Base Install | Drivers | Nvidia | Install 32-bit compatibility libraries"
   community.general.xbps:
-  vars:
-    32bit_libraries:
-      - "libgcc-32bit"
-      - "libstdc++-32bit"
-      - "libdrm-32bit"
-      - "libglvnd-32bit"
-      - "mesa-dri-32bit"
+    state: present
+    name: "{{ library }}"
+  loop:
+    - "libgcc-32bit"
+    - "libstdc++-32bit"
+    - "libdrm-32bit"
+    - "libglvnd-32bit"
+    - "mesa-dri-32bit"
+  loop_control:
+    loop_var: library
 
 #TODO: add nvidia-drm.modeset=1 to GRUB commandline

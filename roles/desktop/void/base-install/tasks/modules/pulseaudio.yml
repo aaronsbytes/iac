@@ -1,5 +1,9 @@
 - name: "Base Install | Pulseaudio | Install packages"
-  vars:
-    pipewire_packages:
-      - pulseaudio
-      - alsa-plugins-pulseaudio
+  community.general.xbps:
+    state: present
+    name: "{{ pulse_package }}"
+  loop:
+    - pulseaudio
+    - alsa-plugins-pulseaudio
+  loop_control:
+    loop_var: pulse_package
