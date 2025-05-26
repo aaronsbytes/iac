@@ -47,6 +47,11 @@
     - simple-scan
     - gnome-calendar
     - gnome-online-accounts
+
+    # security
+    - wireshark
+    - nmap
+    - lynis
   loop_control:
     loop_var: package
 
