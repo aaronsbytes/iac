@@ -1,0 +1,13 @@
+- name: "Base Install | Timezone | Check"
+  stat:
+    path: /etc/localtime
+    follow: false
+  register: localtime_stat
+
+- name: "Base Install | Timezone | Set"
+  file:
+    src: "/usr/share/zoneinfo/Europe/Berlin"
+    dest: /etc/localtime
+    state: link
+    force: true
+  when: localtime_stat.stat.islnk == false or localtime_stat.stat.lnk_source != "/usr/share/zoneinfo/Europe/Berlin"
