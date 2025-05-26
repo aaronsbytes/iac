@@ -1,0 +1,32 @@
+{
+  "logo": {
+    "type": "kitty",
+    "source": "~/.config/fastfetch/image.jpg",
+    "width": 16,
+    "height": 7,
+    "padding": {
+        "top": 0,
+        "left": 2,
+        "right": 2
+    }
+  },
+  "modules": [
+    {"type": "os", "key": " os", "format": "{}"},
+    {"type": "kernel", "key": " kernel", "format": "{}"},
+    {"type": "uptime", "key": "󰅐 uptime", "format": "{}"},
+    {"type": "packages", "key": " packages", "format": "{}"},
+    {"type": "shell", "key": " shell", "format": "{}"},
+    {
+      "type": "localip",
+      "key": " ip",
+      "showIpv6": false,
+      "showMac": false,
+      "showSpeed": false,
+      "showMtu": false,
+      "showLoop": false,
+      "showFlags": false,
+      "showAllIps": false
+    },
+      {"type": "dns", "key": " dns", "format": "{}"}
+  ]
+}
