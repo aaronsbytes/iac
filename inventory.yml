@@ -24,7 +24,12 @@ all:
 
     desktop:
       hosts:
-        void:
-          ansible_host: "{{ void.host }}"
+        #void:
+        #  ansible_host: "{{ void.host }}"
+        #  ansible_user: "root"
+        #  ansible_ssh_pass: "{{ void.root_password }}"
+
+        aaron_workstation:
+          ansible_host: "{{ aaron_workstation.host }}"
           ansible_user: "root"
-          ansible_ssh_pass: "{{ void.root_password }}"
+          ansible_ssh_pass: "{{ aaron_workstation.root_password }}"
