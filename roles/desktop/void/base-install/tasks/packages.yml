@@ -1,0 +1,92 @@
+#::::::::::::::#
+#:::::Xbps:::::#
+#::::::::::::::#
+
+- name: "Base Install | Packages | Xbps | Install"
+  community.general.xbps:
+    state: present
+    name:
+      # CLI
+      - man-db
+      - btop
+      - rclone
+      - fastfetch
+      - neovim
+      - git
+      - github-cli
+      - file
+      - yazi
+      - jq
+      - 7zip
+      - poppler
+      - fd
+      - resvg
+      - ImageMagick
+      - wl-clipboard
+      - ffmpeg
+      - fzf
+      - bat
+      - eza
+      - zoxide
+      - wget
+      - curl
+      - starship
+      - tmux
+      - nerd-fonts
+      - tailscale
+      - wireguard-tools
+
+      # GUI
+      - flatpak
+      - keepassxc
+      - vlc
+      - krita
+      - Signal-Desktop
+
+      # Gaming
+      - steam
+      - lutris
+      - obs
+
+      # Office
+      - simple-scan
+      - gnome-calendar
+      - gnome-online-accounts
+
+      # Security
+      - wireshark
+      - nmap
+      - lynis
+
+#:::::::::::::::::#
+#:::::Flatpak:::::#
+#:::::::::::::::::#
+
+- name: "Base Install | Packages | Flatpak | Ensure flathub remote exists"
+  community.general.flatpak_remote:
+    name: flathub
+    state: present
+    flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
+    method: system
+
+- name: "Base Install | Packages | Flatpak | Install"
+  community.general.flatpak:
+    state: present 
+    method: system
+    name:
+      # Productivity
+      - md.obsidian.Obsidian
+      - com.vscodium.codium
+
+      # Entertainment
+      - com.github.iwalton3.jellyfin-media-player
+
+      # Privacy
+      - org.torproject.torbrowser-launcher
+
+      # Office
+      - org.onlyoffice.desktopeditors
+
+      # Customization
+      - org.gtk.Gtk3theme.adw-gtk3 
+      - org.gtk.Gtk3theme.adw-gtk3-dark

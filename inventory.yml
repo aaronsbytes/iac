@@ -24,16 +24,7 @@ all:
 
     desktop:
       hosts:
-        aaron_laptop:
-          ansible_host: "{{ aaron_laptop.host }}"
-          ansible_user: "{{ aaron_laptop.username }}"
-          ansible_ssh_pass: "{{ aaron_laptop.password }}"
-          ansible_become_method: sudo
-          ansible_become_password: "{{ aaron_laptop.root_password }}"
-
-        aaron_workstation:
-          ansible_host: "{{ aaron_workstation.host }}"
-          ansible_user: "{{ aaron_laptop.username }}"
-          ansible_ssh_pass: "{{ aaron_laptop.password }}"
-          ansible_become_method: sudo
-          ansible_become_password: "{{ aaron_laptop.root_password }}"
+        void:
+          ansible_host: "{{ void.host }}"
+          ansible_user: "root"
+          ansible_ssh_pass: "{{ void.root_password }}"

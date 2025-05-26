@@ -1,0 +1,25 @@
+- name: "Base Install | Users | Create"
+  become: true
+  loop: "{{ users.list }}"
+  loop_control:
+    loop_var: user
+  ansible.builtin.user:
+    # Make sure user exists
+    state: present
+
+    # Auto create home directory
+    create_home: true
+
+    # Remove expiration
+    expires: -1
+
+    # Set name and password
+    name: "{{ user.id }}"
+    password: "{{ user.password | password_hash('sha512', users.password_salt ) }}"
+
+    # Set fish as default shell
+    shell: "/usr/bin/fish"
+
+    # Add user to groups
+    groups: "{{ user.add_groups | default([]) }}" # skip groups if not provided
+    append: true

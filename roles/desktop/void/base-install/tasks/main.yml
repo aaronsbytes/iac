@@ -1,10 +1,28 @@
-- name: "Base Install | Enable nonfree repository"
-  become: true
-  shell: "xbps-install -y void-repo-nonfree"
+- name: "Base Install | XBPS | Check if nonfree repository is installed"
+  community.general.xbps:
+    name: void-repo-nonfree
+    state: present
+  register: nonfree_repo
+  check_mode: true
+  changed_when: false
 
-- name: "Base Install | Perform Update"
+- name: "Base Install | XBPS | Enable nonfree repository"
   become: true
-  shell: "xbps-install -Suy"
+  community.general.xbps:
+    state: present
+    name: void-repo-nonfree
+  when: nonfree_repo is changed
+
+- name: "Base Install | XBPS | Update repository index"
+  community.general.xbps:
+    update_cache: true
+
+- name: "Base Install | XBPS | Update packages"
+  community.general.xbps:
+    upgrade: true
+
+- name: "Base Install | Include package tasks"
+  include_tasks: "packages.yml"
 
 - name: "Base Install | Include modules"
   include_tasks: "{{ item }}"

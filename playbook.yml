@@ -1,101 +1,100 @@
-# Needs some more work.
-#- name: "Desktop; all; x86_64; Void Linux"
-#  hosts: desktop
-#  become: true
-#  vars_files:
-#    - group_vars/desktop/config.yml
-#    - group_vars/desktop/secrets.yml
-#  roles:
-#
-#    - role: desktop/void/base-install
-#      tags:
-#        - desktop
-
-- name: "Server; all; x86_64; Debian Linux"
-  hosts: server
+- name: "Desktop; all; x86_64; Void Linux"
+  hosts: desktop
   become: true
   vars_files:
-    - group_vars/all/secrets.yml
-    - group_vars/server/config.yml
-    - group_vars/all/config.yml
+    - group_vars/desktop/secrets.yml
+    - group_vars/desktop/users.yml
   roles:
-    #Cloudflare DNS
-    - role: server/cloudflare/dns
-      tags:
-        - server
-        - network
-      when: cf_dns | default(false)
 
-    # Performs system updates
-    - role: server/packages/update
+    - role: desktop/void/base-install
       tags:
-        - server
-        - os
-      when: server.settings.update | default(false)
+        - desktop
 
-    # Applies some standards i want for my servers
-    - role: server/base-deployment
-      tags:
-        - server
-        - os
-      when: server.settings.base_deployment | default(false)
-
-    # Perform some custom installations
-    # Such as yazi (not in the repos)
-    - role: server/packages/custom
-      tags:
-        - server
-        - os
-      when: server.settings.custom_installs.enabled | default(false)
-
-    # Storageconf: create nfs share
-    - role: server/storageconf/nfs/create_share
-      tags:
-        - server
-        - os
-      # Only let the nfs host create the share
-      when: inventory_hostname == server.settings.nfs.host.hostname
-
-    # Storageconf: mount nfs share
-    - role: server/storageconf/nfs/mount_share
-      tags:
-        - server
-        - os
-      # NFS share does not need to be mounted on it's host
-      when: inventory_hostname != server.settings.nfs.host.hostname
-
-    # Docker container deployments
-    - role: server/containers
-      tags:
-        - server
-        - containers
-      when: server.settings.containers | default(false)
-
-    # Devsec.hardening: OS
-    # https://github.com/dev-sec/ansible-collection-hardening
-    - role: devsec.hardening.os_hardening
-      vars:
-        sysctl_overwrite:
-          # Needed for Docker
-          net.ipv4.ip_forward: 1
-      tags:
-        - server
-        - security
-        - os
-      when: server.settings.hardening.devsec | default(false)
-
-    # Devsec.hardening: SSH
-    # https://github.com/dev-sec/ansible-collection-hardening
-    - role: devsec.hardening.ssh_hardening
-      tags:
-        - server
-        - security
-        - os
-      when: server.settings.hardening.devsec | default(false)
-
-    # Performs some basic cleanups
-    - role: server/packages/cleanup
-      tags:
-        - server
-        - os
-      when: server.settings.cleanup | default(false)
+#- name: "Server; all; x86_64; Debian Linux"
+#  hosts: server
+#  become: true
+#  vars_files:
+#    - group_vars/server/secrets.yml
+#    - group_vars/server/config.yml
+#  roles:
+#    #Cloudflare DNS
+#    - role: server/cloudflare/dns
+#      tags:
+#        - server
+#        - network
+#      when: cf_dns | default(false)
+#
+#    # Performs system updates
+#    - role: server/packages/update
+#      tags:
+#        - server
+#        - os
+#      when: server.settings.update | default(false)
+#
+#    # Applies some standards i want for my servers
+#    - role: server/base-deployment
+#      tags:
+#        - server
+#        - os
+#      when: server.settings.base_deployment | default(false)
+#
+#    # Perform some custom installations
+#    # Such as yazi (not in the repos)
+#    - role: server/packages/custom
+#      tags:
+#        - server
+#        - os
+#      when: server.settings.custom_installs.enabled | default(false)
+#
+#    # Storageconf: create nfs share
+#    - role: server/storageconf/nfs/create_share
+#      tags:
+#        - server
+#        - os
+#      # Only let the nfs host create the share
+#      when: inventory_hostname == server.settings.nfs.host.hostname
+#
+#    # Storageconf: mount nfs share
+#    - role: server/storageconf/nfs/mount_share
+#      tags:
+#        - server
+#        - os
+#      # NFS share does not need to be mounted on it's host
+#      when: inventory_hostname != server.settings.nfs.host.hostname
+#
+#    # Docker container deployments
+#    - role: server/containers
+#      tags:
+#        - server
+#        - containers
+#      when: server.settings.containers | default(false)
+#
+#    # Devsec.hardening: OS
+#    # https://github.com/dev-sec/ansible-collection-hardening
+#    - role: devsec.hardening.os_hardening
+#      vars:
+#        sysctl_overwrite:
+#          # Needed for Docker
+#          net.ipv4.ip_forward: 1
+#      tags:
+#        - server
+#        - security
+#        - os
+#      when: server.settings.hardening.devsec | default(false)
+#
+#    # Devsec.hardening: SSH
+#    # https://github.com/dev-sec/ansible-collection-hardening
+#    - role: devsec.hardening.ssh_hardening
+#      tags:
+#        - server
+#        - security
+#        - os
+#      when: server.settings.hardening.devsec | default(false)
+#
+#    # Performs some basic cleanups
+#    - role: server/packages/cleanup
+#      tags:
+#        - server
+#        - os
+#      when: server.settings.cleanup | default(false)
+#

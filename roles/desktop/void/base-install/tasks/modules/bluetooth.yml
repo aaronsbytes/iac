@@ -1,17 +1,24 @@
-- name: "Base Install | Bluetooth | Install packages"
-  become: true
-  shell: "xbps-install -y bluez"
+- name: "Base Install | Drivers | Bluetooth | Install"
+  community.general.xbps:
+    state: present
+    name: bluez
 
 - name: "Base Install | Bluetooth | Check if bluetoothd is enabled"
   stat:
     path: "/var/service/bluetoothd"
   register: btd_stat
 
-- name: "Base Install | Bluetooth | Enable service"
+- name: "Base Install | Bluetooth | Check if dbus is enabled"
+  stat:
+    path: "/var/service/dbus"
+  register: dbus_stat
+
+- name: "Base Install | Bluetooth | Enable bluetoothd service"
   become: true
   shell: "ln -s /etc/sv/bluetoothd /var/service"
   when: not btd_stat.stat.exists
 
-- name: "Base Install | Bluetooth | Add user to group"
+- name: "Base Install | Bluetooth | Enable dbus service"
   become: true
-  shell: "usermod -aG bluetooth {{ ansible_user }}"
+  shell: "ln -s /etc/sv/dbus /var/service"
+  when: not dbus_stat.stat.exists

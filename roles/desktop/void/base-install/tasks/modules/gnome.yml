@@ -1,38 +1,74 @@
-#TODO: fix os suspending
-#- name: "Base Install | Gnome | Install packages"
-#  become: true
-#  shell: "xbps-install -Sy gnome-core gdm adwaita-fonts xorg xtools xdg-desktop-portal-gnome xdg-utils xdg-user-dirs gnome-terminal"
-#
-#- name: "Base Install | Gnome | Restart host"
-#  reboot:
-#    reboot_timeout: 600
-#
-#- name: "Base Install | Gnome | Check if gdm is enabled"
-#  stat:
-#    path: "/var/service/gdm"
-#  register: gdm_stat
-#
-#- name: "Base Install | Gnome | Check if NetworkManager is enabled"
-#  stat:
-#    path: "/var/service/NetworkManager"
-#  register: nmgr_stat
-#
-#- name: "Base Install | Gnome | Check if dbus is enabled"
-#  stat:
-#    path: "/var/service/dbus"
-#  register: dbus_stat
-#
-#- name: "Base Install | Gnome | Enable gdm service"
-#  become: true
-#  shell: "ln -s /etc/sv/gdm /var/service"
-#  when: not gdm_stat.stat.exists
-#
-#- name: "Base Install | Gnome | Enable dbus service"
-#  become: true
-#  shell: "ln -s /etc/sv/dbus /var/service"
-#  when: not dbus_stat.stat.exists
-#
-#- name: "Base Install | Gnome | Enable NetworkManager service"
-#  become: true
-#  shell: "ln -s /etc/sv/NetworkManager /var/service"
-#  when: not nmgr_stat.stat.exists
+- name: "Base Install | Gnome | Install packages"
+  community.general.xbps:
+    state: present
+    name:
+      - gnome-core
+      - gdm
+      - adwaita-fonts
+      - xorg
+      - xtools
+      - xdg-desktop-portal-gnome
+      - xdg-utils
+      - xdg-user-dirs
+      - gnome-terminal
+  register: gnome_install_result
+
+- name: "Base Install | Gnome | Restart host"
+  reboot:
+    reboot_timeout: 600
+  when: gnome_install_result.changed
+
+- name: "Base Install | Gnome | Check if GDM is enabled"
+  stat:
+    path: "/var/service/gdm"
+  register: gdm_stat
+
+- name: "Base Install | Gnome | Check if NetworkManager is enabled"
+  stat:
+    path: "/var/service/NetworkManager"
+  register: nmgr_stat
+
+- name: "Base Install | Gnome | Check if DBUS is enabled"
+  stat:
+    path: "/var/service/dbus"
+  register: dbus_stat
+
+- name: "Base Install | Gnome | Enable GDM service"
+  become: true
+  shell: "ln -s /etc/sv/gdm /var/service"
+  when: not gdm_stat.stat.exists
+
+- name: "Base Install | Gnome | Enable DBUS service"
+  become: true
+  shell: "ln -s /etc/sv/dbus /var/service"
+  when: not dbus_stat.stat.exists
+
+- name: "Base Install | Gnome | Enable NetworkManager service"
+  become: true
+  shell: "ln -s /etc/sv/NetworkManager /var/service"
+  when: not nmgr_stat.stat.exists
+
+- name: "Base Install | Gnome | Check if MoreWaita is installed"
+  stat:
+    path: /usr/share/icons/MoreWaita
+  register: morewaita
+
+- name: "Base Install | Gnome | Download MoreWaita"
+  become: true
+  shell: "git clone https://github.com/somepaulo/MoreWaita.git /tmp/MoreWaita"
+  when: not morewaita.stat.exists
+
+- name: "Base Install | Gnome | Execute MoreWaita installer"
+  become: true
+  shell: "cat /tmp/MoreWaita/install.sh | sudo bash"
+  when: not morewaita.stat.exists
+
+- name: "Base Install | Gnome | Remove MoreWaita tmp files"
+  become: true
+  file:
+    path: /tmp/MoreWaita
+    state: absent
+  when: not morewaita.stat.exists
+
+- name: "Base Install | Gnome | Enable gtk3-adw theme"
+  shell: "gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark' && gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'"

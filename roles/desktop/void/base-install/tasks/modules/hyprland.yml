@@ -1,12 +1,11 @@
-# TODO: Need to fix pubkey import for repo
-#- name: "Base Install | Hyprland | Import repository"
-#  become: true
-#  shell: "echo 'repository=https://raw.githubusercontent.com/Makrennel/hyprland-void/repository-x86_64-glibc' | sudo tee /etc/xbps.d/hyprland-void.conf > /dev/null"
-#
-#- name: "Base Install | Hyprland | Update repositories"
-#  become: true
-#  shell: "xbps-install -S"
-#
-#- name: "Base Install | Hyprland | Install"
-#  become: true
-#  shell: "xbps-install -Sy hyprland hyprland-devel xdg-desktop-portal-hyprland"
+- name: "Base Install | Hyprland | Install"
+  community.general.xbps:
+    state: present
+    update_cache: true
+    accept_pubkey: true
+    repositories:
+      - https://raw.githubusercontent.com/Makrennel/hyprland-void/repository-x86_64-glibc
+    name:
+      - hyprland
+      - hyprland-devel
+      - xdg-desktop-portal-hyprland

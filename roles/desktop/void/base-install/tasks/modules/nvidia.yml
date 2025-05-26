@@ -1,9 +1,6 @@
-- name: "Base Install | Nvidia | Install driver"
-  become: true
-  shell: "xbps-install -y nvidia"
-  when: install_nvidia_driver
-
-- name: "Base Install | Nvidia | Restart host"
-  reboot:
-    reboot_timeout: 600
-  when: install_nvidia_driver
+- name: "Base Install | Drivers | Nvidia | Install"
+  community.general.xbps:
+    state: present
+    update_cache: true
+    name: nvidia
+  when: nvidia.driver.install
