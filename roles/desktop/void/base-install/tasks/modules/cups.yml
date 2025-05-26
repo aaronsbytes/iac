@@ -1,6 +1,18 @@
 - name: "Base Install | Cups | Install"
   become: true
-  shell: "xbps-install -y cups cups-filters gutenprint hplip foomatic-db foomatic-db-nonfree brother-brlaser epson-inkjet-printer-escpr cnijfilter2"
+  shell: "xbps-install -Sy {{ printer_driver }}"
+  loop:
+    - cups
+    - cups-filters
+    - gutenprint
+    - hplip
+    - foomatic-db
+    - foomatic-db-nonfree
+    - brother-brlaser
+    - epson-inkjet-printer-escpr
+    - cnijfilter2
+  loop_control:
+    loop_var: printer_driver
 
 - name: "Base Install | Cups | Check if service is enabled"
   stat:

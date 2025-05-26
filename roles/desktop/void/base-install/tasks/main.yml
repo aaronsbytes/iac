@@ -10,7 +10,3 @@
   include_tasks: "{{ item }}"
   with_fileglob:
     - "modules/*.yml"
-
-- name: "Base Install | Restart host"
-  reboot:
-    reboot_timeout: 600
