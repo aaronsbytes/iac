@@ -27,3 +27,8 @@
     regexp: "^(GRUB_CMDLINE_LINUX_DEFAULT=\".*)\"$"
     line: '\1 apparmor=1 security=apparmor"'
   when: grub_cmdline_check.found == 0
+  register: grub_cmdline_set
+
+- name: "Base Install | AppArmor | Update-grub"
+  command: update-grub
+  when: grub_cmdline_set is defined and grub_cmdline_set.changed

@@ -40,3 +40,8 @@
     regexp: "^(GRUB_CMDLINE_LINUX_DEFAULT=\".*)\"$"
     line: '\1 nvidia-drm.modeset=1"'
   when: grub_cmdline_check.found == 0
+  register: grub_cmdline_set
+
+- name: "Base Install | Drivers | Nvidia | Update-grub"
+  command: update-grub
+  when: grub_cmdline_set is defined and grub_cmdline_set.changed
