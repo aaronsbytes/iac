@@ -1,31 +1,31 @@
-#- name: "Base Install | XBPS | Enable nonfree repository"
-#  become: true
-#  community.general.xbps:
-#    state: present
-#    name: void-repo-nonfree
-#
-#- name: "Base Install | XBPS | Enable multilib repository"
-#  become: true
-#  community.general.xbps:
-#    state: present
-#    name: void-repo-multilib
-#
-#- name: "Base Install | XBPS | Enable multilib-nonfree repository"
-#  become: true
-#  community.general.xbps:
-#    state: present
-#    name: void-repo-multilib-nonfree
-#
-#- name: "Base Install | XBPS | Update repository index"
-#  community.general.xbps:
-#    update_cache: true
-#
-#- name: "Base Install | XBPS | Update packages"
-#  community.general.xbps:
-#    upgrade: true
-#
-#- name: "Base Install | Include package tasks"
-#  include_tasks: "packages.yml"
+- name: "Base Install | XBPS | Enable nonfree repository"
+  become: true
+  community.general.xbps:
+    state: present
+    name: void-repo-nonfree
+
+- name: "Base Install | XBPS | Enable multilib repository"
+  become: true
+  community.general.xbps:
+    state: present
+    name: void-repo-multilib
+
+- name: "Base Install | XBPS | Enable multilib-nonfree repository"
+  become: true
+  community.general.xbps:
+    state: present
+    name: void-repo-multilib-nonfree
+
+- name: "Base Install | XBPS | Update repository index"
+  community.general.xbps:
+    update_cache: true
+
+- name: "Base Install | XBPS | Update packages"
+  community.general.xbps:
+    upgrade: true
+
+- name: "Base Install | Include package tasks"
+  include_tasks: "packages.yml"
 
 - name: "Base Install | Include modules"
   include_tasks: "{{ item }}"
