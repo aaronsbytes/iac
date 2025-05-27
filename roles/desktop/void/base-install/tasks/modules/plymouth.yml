@@ -2,7 +2,7 @@
   lineinfile:
     backup: true
     path: /etc/default/grub
-    regexp: '^GRUB_CMDLINE_LINUX_DEFAULT="quiet splash rd.plymouth=1.*'
+    regexp: '^GRUB_CMDLINE_LINUX_DEFAULT="quiet splash .*'
     state: absent
   check_mode: true
   register: grub_cmdline_check
@@ -13,7 +13,7 @@
     path: /etc/default/grub
     backrefs: true
     regexp: '^(GRUB_CMDLINE_LINUX_DEFAULT=")(.*?)"$'
-    line: '\1quiet splash rd.plymouth=1 \2"'
+    line: '\1quiet splash \2"'
     backup: true
   when: grub_cmdline_check.found == 0
   register: grub_cmdline_set

@@ -1,0 +1,27 @@
+- name: "Base Install | Grub | Theme | Check if exists"
+  ansible.builtin.stat:
+    path: /usr/share/grub/themes/lotus
+  register: dir_check
+
+- name: "Base Install | Grub | Theme | Install"
+  ansible.builtin.git:
+    repo: https://github.com/lotusnet-work/grub
+    dest: /usr/share/grub/themes/lotus
+    version: HEAD
+    force: yes
+  become: true
+  when: not dir_check.stat.exists
+
+- name: "Base Install | Grub | Theme | Set"
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/default/grub
+    regexp: '^GRUB_THEME='
+    line: 'GRUB_THEME="/usr/share/grub/themes/lotus/theme.txt"'
+    create: yes
+  register: grub_lotus_theme
+
+- name: "Base Install | Grub | Refresh"
+  become: true
+  command: grub-mkconfig -o /boot/grub/grub.cfg
+  when: grub_lotus_theme.changed
